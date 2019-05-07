@@ -1103,7 +1103,7 @@ int main( int argc, char** argv )
     int benchmark = 0;
 
     // int dimA[] = {1, 32, 4, 4};
-    int dimA[] = {32, 32, 32, 32};
+    int dimA[] = {512, 32, 32, 32};
 
     int padA[] = {0, 0};
     int convstrideA[] = {1, 1};
