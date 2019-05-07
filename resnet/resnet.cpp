@@ -9,6 +9,8 @@ using ull = long long;
 using T = float;
 using dim_t = std::vector<int>;
 using namespace thrust;
+using std::cout;
+using std::endl;
 
 ull get_volume(const dim_t& vec) {
     return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<ull>());
@@ -24,6 +26,23 @@ dim_t get_strides(const dim_t& vec) {
     }
     return tmp;
 }
+void dog_print(std::string name, device_vector<T>& dev_vec, const dim_t& dim) {
+    cout << name << endl;
+    auto sz = get_volume(dim);
+    host_vector<T> vec = dev_vec;
+    auto tmp = dim;
+    std::reverse(tmp.begin(), tmp.end());
+    for(auto index : Range(sz)) {
+        int index_cpy = index;
+        for(auto x : tmp) {
+            if(index_cpy % x != 0) break;
+            index_cpy /= x;
+            cout << "--------" << endl;
+        }
+        cout << vec[index] << " ";
+    }
+    cout << endl << "##########" << endl;
+}
 
 // template <class T>
 void dog_resize_to(device_vector<T>& dev_vec, const dim_t& dim, bool set_value = false) {
@@ -32,7 +51,7 @@ void dog_resize_to(device_vector<T>& dev_vec, const dim_t& dim, bool set_value =
     if(set_value) {
         thrust::host_vector<T> host_vec(sz);
         for(auto id : Range(sz)) {
-            host_vec[id] = (T)id;
+            host_vec[id] = (T)(id % 256);
         }
         dev_vec = host_vec;
     }
@@ -76,10 +95,10 @@ int main() {
     // thrust::host_vector<T> host_in;
     // thrust::host_vector<T> host_out;
     constexpr int B = 1;
-    constexpr int Ci = 32;
-    constexpr int Co = 32;
-    constexpr int W = 32;
-    constexpr int H = 32;
+    constexpr int Ci = 2;
+    constexpr int Co = 2;
+    constexpr int W = 16;
+    constexpr int H = 16;
     constexpr int K = 3;
     constexpr int group = 1;
     constexpr int padding = 1;
@@ -121,7 +140,7 @@ int main() {
     //
     cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4,
                                dims_filter.data());
-    auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+    auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
     {
         size_t workspace_size;
         cudnnGetConvolutionForwardWorkspaceSize(handle, dsc_in, dsc_filter, dsc_conv,
@@ -138,6 +157,8 @@ int main() {
                             dsc_out, dev_out.data().get()                        //
     );
     cudaDeviceSynchronize();
-    
+    dog_print("input", dev_in, dims_in);
+    dog_print("filter", dev_filter, dims_filter);
+    dog_print("output", dev_out, dims_out);
     return 0;
 }
