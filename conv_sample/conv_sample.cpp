@@ -92,6 +92,7 @@
 static double second (void)
 {
     struct timeval tv;
+    cudaDeviceSynchronize();
     gettimeofday(&tv, NULL);
     return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
 }
@@ -1101,7 +1102,8 @@ int main( int argc, char** argv )
     int mathType = 0;
     int benchmark = 0;
 
-    int dimA[] = {1, 32, 4, 4};
+    // int dimA[] = {1, 32, 4, 4};
+    int dimA[] = {32, 32, 32, 32};
 
     int padA[] = {0, 0};
     int convstrideA[] = {1, 1};
