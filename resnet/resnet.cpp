@@ -85,10 +85,13 @@ int main() {
     constexpr int padding = 1;
     constexpr int stride = 1;
     constexpr int dilation = 1;
+    constexpr auto kDataType = CUDNN_DATA_FLOAT;
+    constexpr auto kFilterFormat = CUDNN_TENSOR_NCHW;
     dim_t dims_in = {B, Ci, H, W};
     dim_t dims_filter = {Ci, Co, K, K};
     // dim_t dims_out = {B, Co, W, H};
-    dim_t dims_out = calc_dims_out(dims_in, dims_filter, group, padding, stride, dilation);
+    dim_t dims_out =
+        calc_dims_out(dims_in, dims_filter, group, padding, stride, dilation);
     cudnnHandle_t handle;
     cudnnTensorDescriptor_t dsc_in;
     cudnnFilterDescriptor_t dsc_filter;
@@ -103,7 +106,38 @@ int main() {
     cudnnCreateFilterDescriptor(&dsc_filter);
     cudnnCreateTensorDescriptor(&dsc_out);
     cudnnCreateConvolutionDescriptor(&dsc_conv);
+
+    auto strides_in = get_strides(dims_in);
+    auto strides_filter = get_strides(dims_filter);
+    auto strides_out = get_strides(dims_out);
+
+    cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in.data(), strides_in.data());
+    cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out.data(),
+                               strides_out.data());
+    auto dual_pack = [](int x) { return dim_t{x, x}; };
+    cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding).data(),
+                                    dual_pack(stride).data(), dual_pack(dilation).data(),
+                                    CUDNN_CONVOLUTION, kDataType);
+    //
+    cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4,
+                               dims_filter.data());
+    auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMP_GEMM;
+    {
+        size_t workspace_size;
+        cudnnGetConvolutionForwardWorkspaceSize(handle, dsc_in, dsc_filter, dsc_conv,
+                                                dsc_out, kAlgo, &workspace_size);
+        dev_workspace.resize(workspace_size);
+    }
+    float alpha = 1, beta = 0;
+    cudnnConvolutionForward(handle, &alpha,                                      //
+                            dsc_in, dev_in.data().get(),                         //
+                            dsc_filter, dev_filter.data().get(),                 //
+                            dsc_conv, kAlgo,                                     //
+                            dev_workspace.data().get(), dev_workspace.size(),    //
+                            &beta,                                               //
+                            dsc_out, dev_out.data().get()                        //
+    );
+    cudaDeviceSynchronize();
     
-            
     return 0;
 }

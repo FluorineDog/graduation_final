@@ -929,6 +929,7 @@ int doTest(int algo, int* dimA, int* padA, int* convstrideA, int* filterdimA,
     checkCudnnErr(cudnnSetFilterNdDescriptor(cudnnFdesc, dataType, filterFormat,
                                              convDim + 2, filterdimA_padded));
 
+    // TODO
     if(mathType == 1) {
         checkCudnnErr(cudnnSetConvolutionMathType(cudnnConvDesc, CUDNN_TENSOR_OP_MATH));
     }
