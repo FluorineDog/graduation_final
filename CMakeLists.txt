@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.10)
+project(cudnn_resnet LANGUAGES CXX CUDA)
+find_package(CUDA)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -O3 --gpu-architecture=compute_61 --gpu-code=sm_61)
+add_subdirectory(conv_sample)

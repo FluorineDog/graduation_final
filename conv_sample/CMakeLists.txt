@@ -1,0 +1,5 @@
+add_executable(sample conv_sample.cpp)
+cuda_add_library(culib fp16_dev.cu)
+target_link_libraries(culib cublas cudnn)
+add_library(cpulib fp16_emu.cpp)
+target_link_libraries(sample culib cpulib)
