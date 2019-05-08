@@ -77,13 +77,13 @@ dim_t calc_dims_out(             //
 
 int main() {
     using T = float;
-    thrust::device_vector<T> vec_in;
-    thrust::device_vector<T> vec_filter;
-    thrust::device_vector<T> vec_out;
-    thrust::device_vector<T> vec_in_grad;
-    thrust::device_vector<T> vec_filter_grad;
-    thrust::device_vector<T> vec_out_grad;
-    thrust::device_vector<char> vec_workspace;
+    DeviceVector<T> vec_in;
+    DeviceVector<T> vec_filter;
+    DeviceVector<T> vec_out;
+    DeviceVector<T> vec_in_grad;
+    DeviceVector<T> vec_filter_grad;
+    DeviceVector<T> vec_out_grad;
+    DeviceVector<char> vec_workspace;
     // thrust::host_vector<T> host_weight;
     // thrust::host_vector<T> host_in;
     // thrust::host_vector<T> host_out;
@@ -127,15 +127,12 @@ int main() {
     auto strides_out = get_strides(dims_out);
 
     cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in, strides_in);
-    cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out,
-                               strides_out);
+    cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out, strides_out);
     auto dual_pack = [](int x) { return dim_t{x, x}; };
-    cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding),
-                                    dual_pack(stride), dual_pack(dilation),
-                                    CUDNN_CONVOLUTION, kDataType);
+    cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding), dual_pack(stride),
+                                    dual_pack(dilation), CUDNN_CONVOLUTION, kDataType);
     //
-    cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4,
-                               dims_filter);
+    cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4, dims_filter);
 
     // conv pass
     {
@@ -145,13 +142,13 @@ int main() {
                                                 dsc_out, kAlgo, &workspace_size);
         vec_workspace.resize(workspace_size);
         float alpha = 1, beta = 0;
-        cudnnConvolutionForward(handle, &alpha,                                //
-                                dsc_in, vec_in.data().get(),                   //
-                                dsc_filter, vec_filter.data().get(),           //
-                                dsc_conv, kAlgo,                               //
-                                vec_workspace.data().get(), workspace_size,    //
-                                &beta,                                         //
-                                dsc_out, vec_out.data().get()                  //
+        cudnnConvolutionForward(handle, &alpha,                   //
+                                dsc_in, vec_in,                   //
+                                dsc_filter, vec_filter,           //
+                                dsc_conv, kAlgo,                  //
+                                vec_workspace, workspace_size,    //
+                                &beta,                            //
+                                dsc_out, vec_out                  //
         );
         cudaDeviceSynchronize();
     }
@@ -165,10 +162,9 @@ int main() {
             vec_workspace.resize(workspace_size * 1.5);
         }
         float alpha = 1, beta = 0;
-        cudnnConvolutionBackwardData(handle, &alpha, dsc_filter, vec_filter.data().get(),
-                                     dsc_out, vec_out_grad.data().get(), dsc_conv, kAlgo,
-                                     vec_workspace.data().get(), workspace_size, &beta,
-                                     dsc_in, vec_in_grad.data().get());
+        cudnnConvolutionBackwardData(handle, &alpha, dsc_filter, vec_filter, dsc_out,
+                                     vec_out_grad, dsc_conv, kAlgo, vec_workspace,
+                                     workspace_size, &beta, dsc_in, vec_in_grad);
 
         cudaDeviceSynchronize();
     }
@@ -182,10 +178,9 @@ int main() {
             vec_workspace.resize(workspace_size * 1.5);
         }
         float alpha = 1, beta = 0;
-        cudnnConvolutionBackwardFilter(handle, &alpha, dsc_in, vec_in.data().get(),
-                                     dsc_out, vec_out_grad.data().get(), dsc_conv, kAlgo,
-                                     vec_workspace.data().get(), workspace_size, &beta,
-                                     dsc_filter, vec_filter_grad.data().get());
+        cudnnConvolutionBackwardFilter(
+            handle, &alpha, dsc_in, vec_in, dsc_out, vec_out_grad, dsc_conv, kAlgo,
+            vec_workspace, workspace_size, &beta, dsc_filter, vec_filter_grad);
         cudaDeviceSynchronize();
     }
 

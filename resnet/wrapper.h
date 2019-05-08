@@ -10,6 +10,7 @@ class Dims : public std::vector<int> {
     }
 };
 
+template<class T>
 class DeviceVector : public thrust::device_vector<T> {
   public:
     using thrust::device_vector<T>::device_vector;
