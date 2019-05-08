@@ -26,10 +26,10 @@ dim_t get_strides(const dim_t& vec) {
     }
     return tmp;
 }
-void dog_print(std::string name, device_vector<T>& dev_vec, const dim_t& dim) {
+void dog_print(std::string name, device_vector<T>& vec_vec, const dim_t& dim) {
     cout << name << endl;
     auto sz = get_volume(dim);
-    host_vector<T> vec = dev_vec;
+    host_vector<T> vec = vec_vec;
     auto tmp = dim;
     std::reverse(tmp.begin(), tmp.end());
     for(auto index : Range(sz)) {
@@ -45,15 +45,15 @@ void dog_print(std::string name, device_vector<T>& dev_vec, const dim_t& dim) {
 }
 
 // template <class T>
-void dog_resize_to(device_vector<T>& dev_vec, const dim_t& dim, bool set_value = false) {
+void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value = false) {
     auto sz = get_volume(dim);
-    dev_vec.resize(sz);
+    vec_vec.resize(sz);
     if(set_value) {
         thrust::host_vector<T> host_vec(sz);
         for(auto id : Range(sz)) {
             host_vec[id] = (T)(id % 256);
         }
-        dev_vec = host_vec;
+        vec_vec = host_vec;
     }
 }
 
@@ -87,10 +87,13 @@ dim_t calc_dims_out(             //
 
 int main() {
     using T = float;
-    thrust::device_vector<T> dev_in;
-    thrust::device_vector<T> dev_filter;
-    thrust::device_vector<T> dev_out;
-    thrust::device_vector<char> dev_workspace;
+    thrust::device_vector<T> vec_in;
+    thrust::device_vector<T> vec_filter;
+    thrust::device_vector<T> vec_out;
+    thrust::device_vector<T> vec_in_grad;
+    thrust::device_vector<T> vec_filter_grad;
+    thrust::device_vector<T> vec_out_grad;
+    thrust::device_vector<char> vec_workspace;
     // thrust::host_vector<T> host_weight;
     // thrust::host_vector<T> host_in;
     // thrust::host_vector<T> host_out;
@@ -117,9 +120,12 @@ int main() {
     cudnnTensorDescriptor_t dsc_out;
     cudnnConvolutionDescriptor_t dsc_conv;
 
-    dog_resize_to(dev_in, dims_in, true);
-    dog_resize_to(dev_filter, dims_filter, true);
-    dog_resize_to(dev_out, dims_out, false);
+    dog_resize_to(vec_in, dims_in, true);
+    dog_resize_to(vec_in_grad, dims_in, false);
+    dog_resize_to(vec_filter, dims_filter, true);
+    dog_resize_to(vec_filter_grad, dims_filter, false);
+    dog_resize_to(vec_out, dims_out, false);
+    dog_resize_to(vec_out_grad, dims_out, true);
     cudnnCreate(&handle);
     cudnnCreateTensorDescriptor(&dsc_in);
     cudnnCreateFilterDescriptor(&dsc_filter);
@@ -140,25 +146,61 @@ int main() {
     //
     cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4,
                                dims_filter.data());
-    auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
+
+    // conv pass
     {
+        auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
         size_t workspace_size;
         cudnnGetConvolutionForwardWorkspaceSize(handle, dsc_in, dsc_filter, dsc_conv,
                                                 dsc_out, kAlgo, &workspace_size);
-        dev_workspace.resize(workspace_size);
+        vec_workspace.resize(workspace_size);
+        float alpha = 1, beta = 0;
+        cudnnConvolutionForward(handle, &alpha,                                //
+                                dsc_in, vec_in.data().get(),                   //
+                                dsc_filter, vec_filter.data().get(),           //
+                                dsc_conv, kAlgo,                               //
+                                vec_workspace.data().get(), workspace_size,    //
+                                &beta,                                         //
+                                dsc_out, vec_out.data().get()                  //
+        );
+        cudaDeviceSynchronize();
     }
-    float alpha = 1, beta = 0;
-    cudnnConvolutionForward(handle, &alpha,                                      //
-                            dsc_in, dev_in.data().get(),                         //
-                            dsc_filter, dev_filter.data().get(),                 //
-                            dsc_conv, kAlgo,                                     //
-                            dev_workspace.data().get(), dev_workspace.size(),    //
-                            &beta,                                               //
-                            dsc_out, dev_out.data().get()                        //
-    );
-    cudaDeviceSynchronize();
-    dog_print("input", dev_in, dims_in);
-    dog_print("filter", dev_filter, dims_filter);
-    dog_print("output", dev_out, dims_out);
+    // dgrad pass
+    {
+        auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
+        size_t workspace_size;
+        cudnnGetConvolutionBackwardDataWorkspaceSize(
+            handle, dsc_filter, dsc_out, dsc_conv, dsc_in, kAlgo, &workspace_size);
+        if(workspace_size > vec_workspace.size()) {
+            vec_workspace.resize(workspace_size * 1.5);
+        }
+        float alpha = 1, beta = 0;
+        cudnnConvolutionBackwardData(handle, &alpha, dsc_filter, vec_filter.data().get(),
+                                     dsc_out, vec_out_grad.data().get(), dsc_conv, kAlgo,
+                                     vec_workspace.data().get(), workspace_size, &beta,
+                                     dsc_in, vec_in_grad.data().get());
+
+        cudaDeviceSynchronize();
+    }
+    // Wgrad pass
+    {
+        auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
+        size_t workspace_size;
+        cudnnGetConvolutionBackwardFilterWorkspaceSize(
+            handle, dsc_in, dsc_out, dsc_conv, dsc_filter, kAlgo, &workspace_size);
+        if(workspace_size > vec_workspace.size()) {
+            vec_workspace.resize(workspace_size * 1.5);
+        }
+        float alpha = 1, beta = 0;
+        cudnnConvolutionBackwardFilter(handle, &alpha, dsc_in, vec_in.data().get(),
+                                     dsc_out, vec_out_grad.data().get(), dsc_conv, kAlgo,
+                                     vec_workspace.data().get(), workspace_size, &beta,
+                                     dsc_filter, vec_filter_grad.data().get());
+        cudaDeviceSynchronize();
+    }
+
+    dog_print("input", vec_in, dims_in);
+    dog_print("filter", vec_filter, dims_filter);
+    dog_print("output", vec_out, dims_out);
     return 0;
 }
