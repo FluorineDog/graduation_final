@@ -1,4 +1,6 @@
 #include "common.h"
+#include "wrapper.h"
+using dim_t = Dims;
 
 ull get_volume(const dim_t& vec) {
     return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<ull>());
@@ -124,16 +126,16 @@ int main() {
     auto strides_filter = get_strides(dims_filter);
     auto strides_out = get_strides(dims_out);
 
-    cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in.data(), strides_in.data());
-    cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out.data(),
-                               strides_out.data());
+    cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in, strides_in);
+    cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out,
+                               strides_out);
     auto dual_pack = [](int x) { return dim_t{x, x}; };
-    cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding).data(),
-                                    dual_pack(stride).data(), dual_pack(dilation).data(),
+    cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding),
+                                    dual_pack(stride), dual_pack(dilation),
                                     CUDNN_CONVOLUTION, kDataType);
     //
     cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4,
-                               dims_filter.data());
+                               dims_filter);
 
     // conv pass
     {

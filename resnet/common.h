@@ -7,7 +7,6 @@
 using namespace doglib::common;
 using ull = long long;
 using T = float;
-using dim_t = std::vector<int>;
 using namespace thrust;
 using std::cout;
 using std::endl;
