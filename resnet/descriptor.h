@@ -68,3 +68,34 @@ class FilterDescriptor {
     cudnnFilterDescriptor_t desc_;
     dim_t dims_;
 };
+
+class ConvolutionDescriptor {
+  public:
+    ConvolutionDescriptor(int padding, int stride, int dilation, int group)
+        : padding_(padding), stride_(stride), dilation_(dilation), group_(group) {
+        assert(dilation == 1);
+        cudnnCreateConvolutionDescriptor(&desc_);
+        init();
+    }
+    operator cudnnConvolutionDescriptor_t() {
+        return desc_;
+    }
+    ~ConvolutionDescriptor() {
+        cudnnDestroyConvolutionDescriptor(desc_);
+    }
+
+  private:
+    void init() {
+        auto dual_pack = [](int x) { return dim_t{x, x}; };
+        cudnnSetConvolutionNdDescriptor(desc_, 2, dual_pack(padding_), dual_pack(stride_),
+                                        dual_pack(dilation_), CUDNN_CONVOLUTION,
+                                        kDataType);
+        cudnnSetConvolutionGroupCount(desc_, group_);
+    }
+
+    cudnnConvolutionDescriptor_t desc_;
+    const int padding_;
+    const int stride_;
+    const int dilation_;
+    const int group_;
+};
