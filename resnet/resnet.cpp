@@ -93,8 +93,8 @@ int main() {
     cudnnHandle_t handle;
     TensorDescriptor dsc_in(dims_in);
     TensorDescriptor dsc_out(dims_out);
+    FilterDescriptor dsc_filter(dims_filter);
     
-    cudnnFilterDescriptor_t dsc_filter;
     cudnnConvolutionDescriptor_t dsc_conv;
 
     dog_resize_to(vec_in, dims_in, true);
@@ -106,22 +106,22 @@ int main() {
     cudnnCreate(&handle);
     // cudnnCreateTensorDescriptor(&dsc_in);
     // cudnnCreateTensorDescriptor(&dsc_out);
+    // cudnnCreateFilterDescriptor(&dsc_filter);
 
-    cudnnCreateFilterDescriptor(&dsc_filter);
     cudnnCreateConvolutionDescriptor(&dsc_conv);
 
     // auto strides_in = get_strides(dims_in);
-    auto strides_filter = get_strides(dims_filter);
     // auto strides_out = get_strides(dims_out);
+    // auto strides_filter = get_strides(dims_filter);
 
     // cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in, strides_in);
     // cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out, strides_out);
+    // cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4, dims_filter);
+
     auto dual_pack = [](int x) { return dim_t{x, x}; };
     cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding), dual_pack(stride),
                                     dual_pack(dilation), CUDNN_CONVOLUTION, kDataType);
-    //
-    cudnnSetFilterNdDescriptor(dsc_filter, kDataType, kFilterFormat, 4, dims_filter);
-
+    
     // conv pass
     {
         auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;

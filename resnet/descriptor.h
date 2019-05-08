@@ -29,14 +29,42 @@ class TensorDescriptor {
     operator cudnnTensorDescriptor_t() {
         return desc_;
     }
+    const dim_t& dims() {
+        return dims_;
+    }
     ~TensorDescriptor() {
         cudnnDestroyTensorDescriptor(desc_);
     }
+
   private:
     void init() {
         auto strides = get_strides(dims_);
         cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
     }
     cudnnTensorDescriptor_t desc_;
+    dim_t dims_;
+};
+
+class FilterDescriptor {
+  public:
+    FilterDescriptor(dim_t dims) : dims_(dims) {
+        cudnnCreateFilterDescriptor(&desc_);
+        init();
+    }
+    operator cudnnFilterDescriptor_t() {
+        return desc_;
+    }
+    const dim_t& dims() {
+        return dims_;
+    }
+    ~FilterDescriptor() {
+        cudnnDestroyFilterDescriptor(desc_);
+    }
+
+  private:
+    void init() {
+        cudnnSetFilterNdDescriptor(desc_, kDataType, kFilterFormat, 4, dims_);
+    }
+    cudnnFilterDescriptor_t desc_;
     dim_t dims_;
 };
