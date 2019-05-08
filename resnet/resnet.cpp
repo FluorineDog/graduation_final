@@ -1,16 +1,4 @@
-
-#include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
-#include "doglib/common/common.h"
-#include <cudnn.h>
-#include <cuda_runtime.h>
-using namespace doglib::common;
-using ull = long long;
-using T = float;
-using dim_t = std::vector<int>;
-using namespace thrust;
-using std::cout;
-using std::endl;
+#include "common.h"
 
 ull get_volume(const dim_t& vec) {
     return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<ull>());
