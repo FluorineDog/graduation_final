@@ -1,21 +1,9 @@
 #include "common.h"
 #include "wrapper.h"
+#include "descriptor.h"
 using dim_t = Dims;
 
-ull get_volume(const dim_t& vec) {
-    return std::accumulate(vec.begin(), vec.end(), 1, std::multiplies<ull>());
-}
 
-dim_t get_strides(const dim_t& vec) {
-    dim_t tmp(vec.size());
-    int acc = 1;
-    for(auto iter : Range(vec.size())) {
-        auto cur = vec.size() - 1 - iter;
-        tmp[cur] = acc;
-        acc *= vec[cur];
-    }
-    return tmp;
-}
 void dog_print(std::string name, device_vector<T>& vec_vec, const dim_t& dim) {
     cout << name << endl;
     auto sz = get_volume(dim);
@@ -97,17 +85,16 @@ int main() {
     constexpr int padding = 1;
     constexpr int stride = 1;
     constexpr int dilation = 1;
-    constexpr auto kDataType = CUDNN_DATA_FLOAT;
-    constexpr auto kFilterFormat = CUDNN_TENSOR_NCHW;
     dim_t dims_in = {B, Ci, H, W};
     dim_t dims_filter = {Ci, Co, K, K};
     // dim_t dims_out = {B, Co, W, H};
     dim_t dims_out =
         calc_dims_out(dims_in, dims_filter, group, padding, stride, dilation);
     cudnnHandle_t handle;
-    cudnnTensorDescriptor_t dsc_in;
+    TensorDescriptor dsc_in(dims_in);
+    TensorDescriptor dsc_out(dims_out);
+    
     cudnnFilterDescriptor_t dsc_filter;
-    cudnnTensorDescriptor_t dsc_out;
     cudnnConvolutionDescriptor_t dsc_conv;
 
     dog_resize_to(vec_in, dims_in, true);
@@ -117,17 +104,18 @@ int main() {
     dog_resize_to(vec_out, dims_out, false);
     dog_resize_to(vec_out_grad, dims_out, true);
     cudnnCreate(&handle);
-    cudnnCreateTensorDescriptor(&dsc_in);
+    // cudnnCreateTensorDescriptor(&dsc_in);
+    // cudnnCreateTensorDescriptor(&dsc_out);
+
     cudnnCreateFilterDescriptor(&dsc_filter);
-    cudnnCreateTensorDescriptor(&dsc_out);
     cudnnCreateConvolutionDescriptor(&dsc_conv);
 
-    auto strides_in = get_strides(dims_in);
+    // auto strides_in = get_strides(dims_in);
     auto strides_filter = get_strides(dims_filter);
-    auto strides_out = get_strides(dims_out);
+    // auto strides_out = get_strides(dims_out);
 
-    cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in, strides_in);
-    cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out, strides_out);
+    // cudnnSetTensorNdDescriptor(dsc_in, kDataType, 4, dims_in, strides_in);
+    // cudnnSetTensorNdDescriptor(dsc_out, kDataType, 4, dims_out, strides_out);
     auto dual_pack = [](int x) { return dim_t{x, x}; };
     cudnnSetConvolutionNdDescriptor(dsc_conv, 2, dual_pack(padding), dual_pack(stride),
                                     dual_pack(dilation), CUDNN_CONVOLUTION, kDataType);
@@ -187,5 +175,9 @@ int main() {
     dog_print("input", vec_in, dims_in);
     dog_print("filter", vec_filter, dims_filter);
     dog_print("output", vec_out, dims_out);
+
+    dog_print("input", vec_in_grad, dims_in);
+    dog_print("filter", vec_filter_grad, dims_filter);
+    dog_print("output", vec_out_grad, dims_out);
     return 0;
 }

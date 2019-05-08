@@ -1,3 +1,4 @@
+#pragma once
 #include "common.h"
 class Dims : public std::vector<int> {
   public:
@@ -20,4 +21,4 @@ class DeviceVector : public thrust::device_vector<T> {
     operator T*() const {
         return *this;
     }
-}
+};
