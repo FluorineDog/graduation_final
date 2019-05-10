@@ -74,22 +74,24 @@ int main() {
     global.update_workspace_size(functor.workspace_fwd());
     global.update_workspace_size(functor.workspace_bwd_data());
     global.update_workspace_size(functor.workspace_bwd_filter());
-    doglib::time::Timer timer;
+
+    doglib::time::TimerAdvanced timer([]() { cudaDeviceSynchronize(); });
+
     functor.forward(vec_out, vec_in, vec_filter);
-    cudaDeviceSynchronize();
-    
+    cout << timer.get_step_seconds() << endl;
+
     functor.backwardData(vec_in_grad, vec_out_grad, vec_filter);
-    cudaDeviceSynchronize();
+    cout << timer.get_step_seconds() << endl;
 
     functor.backwardFilter(vec_filter_grad, vec_out_grad, vec_in);
-    cudaDeviceSynchronize();
+    cout << timer.get_step_seconds() << endl;
 
-    dog_print("input", vec_in, dims_in);
-    dog_print("filter", vec_filter, dims_filter);
-    dog_print("output", vec_out, dims_out);
+    // dog_print("input", vec_in, dims_in);
+    // dog_print("filter", vec_filter, dims_filter);
+    // dog_print("output", vec_out, dims_out);
 
-    dog_print("input", vec_in_grad, dims_in);
-    dog_print("filter", vec_filter_grad, dims_filter);
-    dog_print("output", vec_out_grad, dims_out);
+    // dog_print("input", vec_in_grad, dims_in);
+    // dog_print("filter", vec_filter_grad, dims_filter);
+    // dog_print("output", vec_out_grad, dims_out);
     return 0;
 }
