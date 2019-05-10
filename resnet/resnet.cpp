@@ -1,8 +1,11 @@
 #include "common.h"
 #include "wrapper.h"
 #include "descriptor.h"
-using dim_t = Dims;
+#include "global.h"
+#include "functor.h"
 
+using dim_t = Dims;
+Global global;
 
 void dog_print(std::string name, device_vector<T>& vec_vec, const dim_t& dim) {
     cout << name << endl;
@@ -35,33 +38,7 @@ void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value =
     }
 }
 
-// assume dilation = 1
-dim_t calc_dims_out(             //
-    const dim_t& dims_in,        //
-    const dim_t& dims_filter,    //
-    int group,                   //
-    int padding,                 //
-    int stride,                  //
-    int dilation                 //
-) {
-    assert(dims_in.size() == 4);
-    assert(dims_filter.size() == 4);
-    assert(dims_in[1] == dims_filter[0]);
-    assert(group == 1);       // todo
-    assert(dilation == 1);    // todo
-    dim_t output(4);
-    // B
-    output[0] = dims_in[0];
-    // Co
-    output[1] = dims_filter[1];
-    auto gen_len = [=](int len, int kernel) {
-        return (len - kernel + 2 * padding) / stride + 1;
-    };
-    // H, W
-    output[2] = gen_len(dims_in[2], dims_filter[2]);
-    output[3] = gen_len(dims_in[3], dims_filter[3]);
-    return output;
-}
+
 
 int main() {
     using T = float;
@@ -87,6 +64,7 @@ int main() {
     constexpr int dilation = 1;
     dim_t dims_in = {B, Ci, H, W};
     dim_t dims_filter = {Ci, Co, K, K};
+    
     // dim_t dims_out = {B, Co, W, H};
     dim_t dims_out =
         calc_dims_out(dims_in, dims_filter, group, padding, stride, dilation);
@@ -94,7 +72,6 @@ int main() {
     TensorDescriptor dsc_in(dims_in);
     TensorDescriptor dsc_out(dims_out);
     FilterDescriptor dsc_filter(dims_filter);
-    
     ConvolutionDescriptor dsc_conv(padding, stride, dilation, group);
 
     dog_resize_to(vec_in, dims_in, true);
@@ -104,6 +81,7 @@ int main() {
     dog_resize_to(vec_out, dims_out, false);
     dog_resize_to(vec_out_grad, dims_out, true);
     cudnnCreate(&handle);
+
 
     // conv pass
     {

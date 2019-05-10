@@ -22,9 +22,11 @@ constexpr auto kDataType = CUDNN_DATA_FLOAT;
 constexpr auto kFilterFormat = CUDNN_TENSOR_NCHW;
 class TensorDescriptor {
   public:
-    TensorDescriptor(dim_t dims) : dims_(dims) {
+    TensorDescriptor()  {
         cudnnCreateTensorDescriptor(&desc_);
-        init();
+    }
+    explicit TensorDescriptor(dim_t dims): TensorDescriptor() {
+        init(dims);
     }
     operator cudnnTensorDescriptor_t() {
         return desc_;
@@ -36,20 +38,23 @@ class TensorDescriptor {
         cudnnDestroyTensorDescriptor(desc_);
     }
 
-  private:
-    void init() {
+    void init(dim_t dims) {
+        dims_ = dims;
         auto strides = get_strides(dims_);
         cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
     }
+  private:
     cudnnTensorDescriptor_t desc_;
     dim_t dims_;
 };
 
 class FilterDescriptor {
   public:
-    FilterDescriptor(dim_t dims) : dims_(dims) {
+    FilterDescriptor() {
         cudnnCreateFilterDescriptor(&desc_);
-        init();
+    }
+    explicit FilterDescriptor(dim_t dims): FilterDescriptor() {
+        init(dims);
     }
     operator cudnnFilterDescriptor_t() {
         return desc_;
@@ -61,10 +66,12 @@ class FilterDescriptor {
         cudnnDestroyFilterDescriptor(desc_);
     }
 
-  private:
-    void init() {
+    void init(dim_t dims) {
+        dims_ = dims;
         cudnnSetFilterNdDescriptor(desc_, kDataType, kFilterFormat, 4, dims_);
     }
+
+  private:
     cudnnFilterDescriptor_t desc_;
     dim_t dims_;
 };
