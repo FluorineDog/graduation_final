@@ -3,6 +3,7 @@
 #include "descriptor.h"
 #include "global.h"
 #include "conv.h"
+#include "../doglib/time/timer.h"
 
 using dim_t = Dims;
 Global global;
@@ -48,11 +49,11 @@ int main() {
     DeviceVector<T> vec_out_grad;
     DeviceVector<char> vec_workspace;
 
-    constexpr int B = 1;
-    constexpr int Ci = 2;
-    constexpr int Co = 2;
-    constexpr int W = 16;
-    constexpr int H = 16;
+    constexpr int B = 4;
+    constexpr int Ci = 512;
+    constexpr int Co = 512;
+    constexpr int W = 64;
+    constexpr int H = 64;
     constexpr int K = 3;
     constexpr int group = 1;
     constexpr int padding = 1;
@@ -73,10 +74,10 @@ int main() {
     global.update_workspace_size(functor.workspace_fwd());
     global.update_workspace_size(functor.workspace_bwd_data());
     global.update_workspace_size(functor.workspace_bwd_filter());
-
+    doglib::time::Timer timer;
     functor.forward(vec_out, vec_in, vec_filter);
     cudaDeviceSynchronize();
-
+    
     functor.backwardData(vec_in_grad, vec_out_grad, vec_filter);
     cudaDeviceSynchronize();
 
