@@ -2,7 +2,7 @@
 #include "wrapper.h"
 #include "descriptor.h"
 #include "global.h"
-#include "functor.h"
+#include "conv.h"
 
 using dim_t = Dims;
 Global global;
