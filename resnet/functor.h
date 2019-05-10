@@ -47,7 +47,7 @@ class FunctorBase {
     virtual size_t workspace_fwd() = 0;
     virtual size_t workspace_bwd_data() = 0;
     virtual size_t workspace_bwd_filter() = 0;
-    virtual ~FunctorBase(){}
+    virtual ~FunctorBase() {}
 };
 
 class ConvolutionFunctor : public FunctorBase {
@@ -56,7 +56,8 @@ class ConvolutionFunctor : public FunctorBase {
                        int stride, int dilation)
         : dsc_conv(padding, stride, dilation, group),
           dsc_in(dims_in),
-          dsc_filter(dims_filter) {
+          dsc_filter(dims_filter),
+          params_{group, padding, stride, dilation} {
         dim_t dims_out =
             calc_dims_out(dims_in, dims_filter, group, padding, stride, dilation);
         dsc_out.init(dims_out);
@@ -117,8 +118,19 @@ class ConvolutionFunctor : public FunctorBase {
     dim_t get_dims_out() {
         return dsc_out.dims();
     }
+    struct Params {
+        int group;
+        int padding;
+        int stride;
+        int dilation;
+    };
+
+    const Params& get_params() {
+        return params_;
+    }
 
   private:
+    Params params_;
     ConvolutionDescriptor dsc_conv;
     TensorDescriptor dsc_in;
     TensorDescriptor dsc_out;
