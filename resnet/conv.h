@@ -29,7 +29,7 @@ static dim_t calc_dims_out(      //
     return output;
 }
 
-class ConvolutionFunctor : public FunctorBase {
+class ConvolutionFunctor {
   public:
     ConvolutionFunctor(dim_t dims_in, dim_t dims_filter, int group, int padding,
                        int stride, int dilation)
