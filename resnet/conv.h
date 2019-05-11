@@ -69,6 +69,13 @@ class ConvolutionFunctor {
                                      global.get_workspace(), global.get_workspace_size(),
                                      &beta, dsc_in, in_grad);
     }
+
+    void backward(void* in_grad, void* weight_grad, const void* in, const void* out_grad,
+                  const void* weight) {
+        backwardData(in_grad, out_grad, weight);
+        backwardFilter(weight_grad, out_grad, in);
+    }
+
     size_t workspace_bwd_data() {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
         size_t workspace_size;
@@ -77,8 +84,7 @@ class ConvolutionFunctor {
                                                      &workspace_size);
         return workspace_size;
     }
-    void backwardFilter(void* filter_grad, const void* out_grad,
-                        const void* in) {
+    void backwardFilter(void* filter_grad, const void* out_grad, const void* in) {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
         float alpha = 1, beta = 0;
         cudnnConvolutionBackwardFilter(global.get_handle(), &alpha, dsc_in, in, dsc_out,
@@ -96,6 +102,15 @@ class ConvolutionFunctor {
     }
     dim_t get_dims_out() {
         return dsc_out.dims();
+    }
+
+    size_t get_weight_size() {
+        return get_volume(dsc_filter.dims());
+    }
+
+    size_t get_workspace() {
+        return std::max(workspace_bwd_data(),
+                        std::max(workspace_bwd_filter(), workspace_fwd()));
     }
     struct Params {
         int group;

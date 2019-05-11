@@ -81,7 +81,7 @@ int main() {
     cout << timer.get_step_seconds() << endl;
 
     functor.backwardData(vec_in_grad, vec_out_grad, vec_filter);
-    cout << timer.get_step_seconds() << endl;
+    // cout << timer.get_step_seconds() << endl;
 
     functor.backwardFilter(vec_filter_grad, vec_out_grad, vec_in);
     cout << timer.get_step_seconds() << endl;
