@@ -22,10 +22,10 @@ constexpr auto kDataType = CUDNN_DATA_FLOAT;
 constexpr auto kFilterFormat = CUDNN_TENSOR_NCHW;
 class TensorDescriptor {
   public:
-    TensorDescriptor()  {
+    TensorDescriptor() {
         cudnnCreateTensorDescriptor(&desc_);
     }
-    explicit TensorDescriptor(dim_t dims): TensorDescriptor() {
+    explicit TensorDescriptor(dim_t dims) : TensorDescriptor() {
         init(dims);
     }
     operator cudnnTensorDescriptor_t() {
@@ -43,6 +43,7 @@ class TensorDescriptor {
         auto strides = get_strides(dims_);
         cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
     }
+
   private:
     cudnnTensorDescriptor_t desc_;
     dim_t dims_;
@@ -53,7 +54,7 @@ class FilterDescriptor {
     FilterDescriptor() {
         cudnnCreateFilterDescriptor(&desc_);
     }
-    explicit FilterDescriptor(dim_t dims): FilterDescriptor() {
+    explicit FilterDescriptor(dim_t dims) : FilterDescriptor() {
         init(dims);
     }
     operator cudnnFilterDescriptor_t() {
