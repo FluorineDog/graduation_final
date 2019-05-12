@@ -13,7 +13,8 @@ net = nn.Sequential(nn.Linear(10, 2))
 
 
 criterion = nn.CrossEntropyLoss()
-opt = tf.optim.Adam(net.parameters(), lr=0.0001, weight_decay=5e-4)
+# opt = tf.optim.Adam(net.parameters(), lr=0.0001, weight_decay=5e-4)
+opt = tf.optim.SGD(net.parameters(), momentum=0.9,lr=0.001, weight_decay=5e-4)
 
 
 for iter in range(1000000):
