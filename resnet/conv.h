@@ -44,7 +44,7 @@ class ConvolutionFunctor {
     void forward(void* out, const void* in, const void* filter) {
         float alpha = 1, beta = 0;
         auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
-        cudnnConvolutionForward(global.get_handle(), &alpha,                            //
+        cudnnConvolutionForward(global.cudnn_handle(), &alpha,                            //
                                 dsc_in, in,                                             //
                                 dsc_filter, filter,                                     //
                                 dsc_conv, kAlgo,                                        //
@@ -56,7 +56,7 @@ class ConvolutionFunctor {
     size_t workspace_fwd() {
         auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
         size_t workspace_size;
-        cudnnGetConvolutionForwardWorkspaceSize(global.get_handle(), dsc_in, dsc_filter,
+        cudnnGetConvolutionForwardWorkspaceSize(global.cudnn_handle(), dsc_in, dsc_filter,
                                                 dsc_conv, dsc_out, kAlgo,
                                                 &workspace_size);
         return workspace_size;
@@ -64,7 +64,7 @@ class ConvolutionFunctor {
     void backwardData(void* in_grad, const void* out_grad, const void* filter) {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
         float alpha = 1, beta = 0;
-        cudnnConvolutionBackwardData(global.get_handle(), &alpha, dsc_filter, filter,
+        cudnnConvolutionBackwardData(global.cudnn_handle(), &alpha, dsc_filter, filter,
                                      dsc_out, out_grad, dsc_conv, kAlgo,
                                      global.get_workspace(), global.get_workspace_size(),
                                      &beta, dsc_in, in_grad);
@@ -79,7 +79,7 @@ class ConvolutionFunctor {
     size_t workspace_bwd_data() {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
         size_t workspace_size;
-        cudnnGetConvolutionBackwardDataWorkspaceSize(global.get_handle(), dsc_filter,
+        cudnnGetConvolutionBackwardDataWorkspaceSize(global.cudnn_handle(), dsc_filter,
                                                      dsc_out, dsc_conv, dsc_in, kAlgo,
                                                      &workspace_size);
         return workspace_size;
@@ -87,7 +87,7 @@ class ConvolutionFunctor {
     void backwardFilter(void* filter_grad, const void* out_grad, const void* in) {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
         float alpha = 1, beta = 0;
-        cudnnConvolutionBackwardFilter(global.get_handle(), &alpha, dsc_in, in, dsc_out,
+        cudnnConvolutionBackwardFilter(global.cudnn_handle(), &alpha, dsc_in, in, dsc_out,
                                        out_grad, dsc_conv, kAlgo, global.get_workspace(),
                                        global.get_workspace_size(), &beta, dsc_filter,
                                        filter_grad);
@@ -95,7 +95,7 @@ class ConvolutionFunctor {
     size_t workspace_bwd_filter() {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
         size_t workspace_size;
-        cudnnGetConvolutionBackwardFilterWorkspaceSize(global.get_handle(), dsc_in,
+        cudnnGetConvolutionBackwardFilterWorkspaceSize(global.cudnn_handle(), dsc_in,
                                                        dsc_out, dsc_conv, dsc_filter,
                                                        kAlgo, &workspace_size);
         return workspace_size;

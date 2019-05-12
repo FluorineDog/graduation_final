@@ -1,17 +1,26 @@
 #pragma once
 #include "common.h"
 #include "wrapper.h"
+#include "cublas.h"
 class Global {
   public:
     Global() {
-        cudnnCreate(&handle_);
+        cudnnCreate(&cudnn_handle_);
+        cublasCreate_v2(&blas_handle_);
     }
     ~Global() {
-        cudnnDestroy(handle_);
+        cudnnDestroy(cudnn_handle_);
+        cublasDestroy_v2(blas_handle_);
     }
-    cudnnHandle_t get_handle(){
-        return handle_;
+
+    cudnnHandle_t cudnn_handle() {
+        return cudnn_handle_;
     }
+
+    cublasHandle_t cublas_handle() {
+        return blas_handle_;
+    }
+
     void* get_workspace() {
         return workspace_.data().get();
     }
@@ -26,6 +35,7 @@ class Global {
 
   private:
     device_vector<char> workspace_;
-    cudnnHandle_t handle_;
+    cudnnHandle_t cudnn_handle_;
+    cublasHandle_t blas_handle_;
 };
 extern Global global;

@@ -18,7 +18,7 @@ class BatchNorm {
         auto bnSavedVar = 3 * bn_size + (T*)extra;
         ++fwd_counter;
         cudnnBatchNormalizationForwardTraining(
-            global.get_handle(), kMode, &alpha, &beta, dsc_io, in, dsc_io, out, dsc_bn,
+            global.cudnn_handle(), kMode, &alpha, &beta, dsc_io, in, dsc_io, out, dsc_bn,
             bnScale, bnBias, 1.0 / fwd_counter, bnRunningMean, bnRunningVar,
             CUDNN_BN_MIN_EPSILON, bnSavedMean, bnSavedVar);
     }
@@ -37,7 +37,7 @@ class BatchNorm {
         auto bnSavedMean = 2 * bn_size + (T*)extra;
         auto bnSavedVar = 3 * bn_size + (T*)extra;
         cudnnBatchNormalizationBackward(
-            global.get_handle(), kMode, &alpha, &beta, &alpha, &beta, dsc_io, in, dsc_io,
+            global.cudnn_handle(), kMode, &alpha, &beta, &alpha, &beta, dsc_io, in, dsc_io,
             out_grad, dsc_io, in_grad, dsc_bn, bnScale, bnScale_grad, bnBias_grad,
             CUDNN_BN_MIN_EPSILON, bnSavedMean, bnSavedVar);
     }
