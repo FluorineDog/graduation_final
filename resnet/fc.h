@@ -43,7 +43,7 @@ class FCFunctor {
         // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N, batch, in_size,
         //                out_size, &float_one, in, in_size, weight, out_size, &float_one,
         //                out, out_size);
-        sgemm(false, false, batch, in_size, out_size, in, weight, out, true);
+        sgemm(false, false, batch, in_size, out_size, in, weight, out, false);
     }
 
     void backward(void* in_grad, void* weight_grad, const void* in, const void* out_grad,

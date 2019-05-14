@@ -27,7 +27,7 @@ void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
         for(auto x : tmp) {
             if(index_cpy % x != 0) break;
             index_cpy /= x;
-            cout << "--------" << endl;
+            cout << endl << "--------" << endl;
         }
         cout << vec[index] << " ";
     }
@@ -35,14 +35,14 @@ void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
 }
 
 // template <class T>
-void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value = false) {
+void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value = false, bool debug = false) {
     auto sz = get_volume(dim);
     std::default_random_engine e(3);
     vec_vec.resize(sz);
     if(set_value) {
         thrust::host_vector<T> host_vec(sz);
         for(auto id : Range(sz)) {
-            host_vec[id] = (T)(e() % 201 / 100.0) - 1;
+            host_vec[id] = debug ? pow(10, id): id;
         }
         vec_vec = host_vec;
     }
@@ -119,7 +119,7 @@ DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_s
 }
 
 int main() {
-    int N = 1;
+    int N = 2;
     int batch = N;
     int in_size = 4;
     int class_size = 2;
@@ -135,7 +135,7 @@ int main() {
 
     dog_resize_to(d_loss, {N});
     dog_resize_to(data, {N, in_size}, true);
-    dog_resize_to(parameters, {(int)fc.size_parameters()}, true);
+    dog_resize_to(parameters, {(int)fc.size_parameters()}, true, true);
     dog_resize_to(parameters_grad, {(int)fc.size_parameters()}, true);
     dog_resize_to(feature_map, {N, class_size}, true);
     dog_resize_to(grad_map, {N, class_size}, false);
@@ -145,24 +145,25 @@ int main() {
         cout << lb << " ";
     }
     cout << endl;
-    for(auto iteration : Range(100)) {
+    for(auto iteration : Range(1)) {
         cout << grad_map.size() << endl;
         float loss = 0;
         // thrust::fill_n(thrust::device, d_loss.begin(), 1, 0.0f);
         fc.forward(feature_map, data, parameters);
-        dog_print("feature_map", feature_map, {N, class_size});
         ce.forward(d_loss, feature_map, labels);
-        // dog_print("d_loss", d_loss, {1});
 
         ce.backward(grad_map, d_loss, labels);
-        dog_print("gard_map", grad_map, {N, class_size});
         fc.backward(nullptr, parameters_grad, data, grad_map, parameters);
-        // dog_print("p_gard", parameters_grad, {N, class_size});
 
         loss = thrust::reduce(thrust::device, d_loss.begin(), d_loss.end());
+
+        dog_print("x", data, {N, in_size});
+        dog_print("Wb", parameters, {1 + in_size, class_size});
+        dog_print("y", feature_map,  {N, class_size});
         thrust::transform(thrust::device, parameters.begin(), parameters.end(),
                           parameters_grad.begin(), parameters.begin(),
                           thrust::plus<float>());
+
         cout << loss << endl;
         cout << endl;
         cout << endl;
