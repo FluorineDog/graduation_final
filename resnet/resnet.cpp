@@ -43,7 +43,7 @@ void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value =
     if(set_value) {
         thrust::host_vector<T> host_vec(sz);
         for(auto id : Range(sz)) {
-            host_vec[id] = e() % 2000 / 1000.0 - 1;
+            host_vec[id] = e() % 2001 / 1000.0 - 1;
         }
         vec_vec = host_vec;
     }
@@ -114,15 +114,15 @@ DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_s
         for(auto eid : Range(entry_size)) {
             sum += h_d[bid * entry_size + eid];
         }
-        tmp.push_back(sum >= 0.4 * entry_size);
+        tmp.push_back(sum >=  0);
     }
     return tmp;
 }
 
 int main() {
-    int N = 100;
+    int N = 3000;
     int batch = N;
-    int in_size = 4;
+    int in_size = 10;
     int class_size = 2;
     DeviceVector<T> d_loss;
     DeviceVector<T> data;
@@ -146,7 +146,7 @@ int main() {
         cout << lb << " ";
     }
     cout << endl;
-    for(auto iteration : Range(10000)) {
+    for(auto iteration : Range(100)) {
         float loss = 0;
         thrust::fill_n(thrust::device, parameters_grad.begin(), in_size * class_size, 0.00233);
         // dog_print("x", data, {N, in_size});
@@ -156,7 +156,7 @@ int main() {
         ce.forward(d_loss, feature_map, labels);
         // dog_print("loss", d_loss, {N});
         loss = thrust::reduce(thrust::device, d_loss.begin(), d_loss.end());
-        cout <<  "^^" <<  loss << endl;
+        cout <<  "^^" <<  loss / N << endl;
         ce.backward(grad_map, d_loss, labels);
         // dog_print("@y", grad_map, {N, class_size});
         fc.backward(nullptr, parameters_grad, data, grad_map, parameters);

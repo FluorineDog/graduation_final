@@ -11,15 +11,16 @@ __global__ void nll_loss(float *loss, const float *logits_grad, const int *label
     }
 }
 
-__global__ void nll_loss_backward(float *logits_grad, const float* loss_grad, const int *labels,
+__global__ void nll_loss_backward(float *logits_grad, const float* loss, const int *labels,
                                   int C, int N) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if(index < N * C) {
         logits_grad[index] = 0.0;
     }
     if(index < N) {
+        auto loss_grad = -0.1 * loss[index] / N;
         int class_id = labels[index];
-        logits_grad[index * C + class_id] = 0.01 * loss_grad[index];
+        logits_grad[index * C + class_id] = -loss_grad;
     }
 }
 
