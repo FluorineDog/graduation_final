@@ -27,9 +27,9 @@ class FCFunctor {
         thrust::fill_n(ones.begin(), batch, 1.0);
     }
     void forward(void* out_, const void* in_, const void* weight_) {
-        auto out = (float*)out_;
-        auto in = (float*)in_;
-        auto weight = (float*)weight_;
+        auto out = static_cast<float*>(out_);
+        auto in = static_cast<const float*>(in_);
+        auto weight = static_cast<const float*>(weight_);
         auto bias = weight + in_size * out_size;
         // add_biased(out, out_size, batch, 1.0, bias);
         // float float_one = 1.0;
@@ -60,14 +60,14 @@ class FCFunctor {
 
   private:
     void backwardFilter(void* weight_grad_, const void* in_, const void* out_grad_) {
-        auto in = (float*)in_;
-        auto out_grad = (float*)out_grad_;
-        auto weight_grad = (float*)weight_grad_;
+        auto in = (const float*)in_;
+        auto out_grad = (const float*)out_grad_;
+        auto weight_grad = static_cast<float*>(weight_grad_);
         auto bias_grad = weight_grad + in_size * out_size;
         // float float_one = 1.0;
         float float_zero = 0.0;
         // W: inxout <= batch*in x batch*out
-        sgemm(true, false, in_size, batch, out_size, in, out_grad, out_grad);
+        sgemm(true, false, in_size, batch, out_size, in, out_grad, weight_grad);
         // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N, in_size, batch,
         //                out_size, &float_one, in, in_size, out_grad, out_size, &float_zero,
         //                out_grad, out_size);
@@ -77,9 +77,9 @@ class FCFunctor {
     }
     void backwardData(void* in_grad_, const void* weight_, const void* out_grad_) {
         // in: batchxin: batchxout * in*out
-        auto in_grad = (float*)in_grad_;
-        auto out_grad = (float*)out_grad_;
-        auto weight = (float*)weight_;
+        auto in_grad = static_cast<float*>(in_grad_);
+        auto out_grad = static_cast<const float*>(out_grad_);
+        auto weight = static_cast<const float*>(weight_);
         // auto bias = weight + in_size * out_size;
         // float float_one = 1.0;
         // float float_zero = 0.0;
