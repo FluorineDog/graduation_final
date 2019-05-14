@@ -121,7 +121,7 @@ DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_s
 }
 
 int main() {
-    int N = 1;
+    int N = 100;
     int batch = N;
     int in_size = 4;
     int class_size = 2;
@@ -147,31 +147,30 @@ int main() {
         cout << lb << " ";
     }
     cout << endl;
-    for(auto iteration : Range(2)) {
-        cout << grad_map.size() << endl;
+    for(auto iteration : Range(10000)) {
         float loss = 0;
         thrust::fill_n(thrust::device, parameters_grad.begin(), in_size * class_size, 0.00233);
-        dog_print("x", data, {N, in_size});
-        dog_print("Wb", parameters, {1 + in_size, class_size});
+        // dog_print("x", data, {N, in_size});
+        // dog_print("Wb", parameters, {1 + in_size, class_size});
         fc.forward(feature_map, data, parameters);
-        dog_print("y", feature_map, {N, class_size});
+        // dog_print("y", feature_map, {N, class_size});
         ce.forward(d_loss, feature_map, labels);
-        dog_print("loss", d_loss, {N});
+        // dog_print("loss", d_loss, {N});
         loss = thrust::reduce(thrust::device, d_loss.begin(), d_loss.end());
         cout <<  "^^" <<  loss << endl;
         ce.backward(grad_map, d_loss, labels);
-        dog_print("@y", grad_map, {N, class_size});
+        // dog_print("@y", grad_map, {N, class_size});
         fc.backward(nullptr, parameters_grad, data, grad_map, parameters);
-        dog_print("@Wb", parameters_grad, {1 + in_size, class_size});
+        // dog_print("@Wb", parameters_grad, {1 + in_size, class_size});
 
 
         thrust::transform(thrust::device, parameters.begin(), parameters.end(),
                           parameters_grad.begin(), parameters.begin(),
                           thrust::plus<float>());
 
-        cout << "&&&" << endl;
-        cout << "&&&" << endl;
-        cout << "&&&" << endl;
+        // cout << "&&&" << endl;
+        // cout << "&&&" << endl;
+        // cout << "&&&" << endl;
         if(loss < .0000001) break;
     }
 }

@@ -19,7 +19,7 @@ __global__ void nll_loss_backward(float *logits_grad, const float* loss_grad, co
     }
     if(index < N) {
         int class_id = labels[index];
-        logits_grad[index * C + class_id] = -0.1 * loss_grad[index];
+        logits_grad[index * C + class_id] = 0.01 * loss_grad[index];
     }
 }
 
