@@ -39,7 +39,7 @@ void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value =
     }
 }
 
-int main() {
+int workload_conv() {
     using T = float;
     DeviceVector<T> vec_in;
     DeviceVector<T> vec_filter;
@@ -48,7 +48,6 @@ int main() {
     DeviceVector<T> vec_filter_grad;
     DeviceVector<T> vec_out_grad;
     DeviceVector<char> vec_workspace;
-
     constexpr int B = 4;
     constexpr int Ci = 512;
     constexpr int Co = 512;
@@ -94,4 +93,8 @@ int main() {
     // dog_print("filter", vec_filter_grad, dims_filter);
     // dog_print("output", vec_out_grad, dims_out);
     return 0;
+}
+
+int main() {
+    
 }

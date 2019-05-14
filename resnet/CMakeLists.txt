@@ -1,4 +1,4 @@
 add_executable(resnet resnet.cu)
 target_link_libraries(resnet cublas cudnn)
-add_library(cu_extra cu_extra.cu)
-target_link_libraries(resnet cu_extra)
+add_library(cross_entropy cross_entropy.cu)
+target_link_libraries(resnet cross_entropy)
