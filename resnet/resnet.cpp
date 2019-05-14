@@ -4,9 +4,15 @@
 #include "global.h"
 #include "conv.h"
 #include "../doglib/time/timer.h"
+#include "fc.h"
+#include "cross_entropy.h"
+#include "../../../../../usr/local/cuda/include/driver_types.h"
+
+using std::vector;
 
 using dim_t = Dims;
 Global global;
+class A {};
 
 void dog_print(std::string name, device_vector<T>& vec_vec, const dim_t& dim) {
     cout << name << endl;
@@ -33,7 +39,7 @@ void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value =
     if(set_value) {
         thrust::host_vector<T> host_vec(sz);
         for(auto id : Range(sz)) {
-            host_vec[id] = (T)(id % 256);
+            host_vec[id] = (T)(id % 257 / 128.0);
         }
         vec_vec = host_vec;
     }
@@ -95,6 +101,51 @@ int workload_conv() {
     return 0;
 }
 
+DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_size) {
+    vector<int> tmp; thrust::host_vector<T> h_d(data);
+
+    for(auto bid : Range(batch)) {
+        double sum = 0;
+        for(auto eid : Range(entry_size)) {
+            sum += h_d[bid * entry_size + eid];
+        }
+        tmp.push_back(sum >= entry_size);
+    }
+    return tmp;
+}
+
 int main() {
-    
+    int N = 256;
+    int batch = N;
+    int in_size = 128;
+    int class_size = 2;
+    DeviceVector<T> d_loss;
+    DeviceVector<T> data;
+    DeviceVector<T> parameters;
+    DeviceVector<T> parameters_grad;
+    DeviceVector<T> feature_map;
+    DeviceVector<T> grad_map;
+    FCFunctor fc(batch, in_size, class_size);
+    CrossEntropy ce(class_size, N);
+    global.update_workspace_size(ce.workspace());
+
+    dog_resize_to(d_loss, {1}, true);
+    dog_resize_to(data, {N, in_size}, true);
+    dog_resize_to(parameters, {(int)fc.size_parameters()}, true);
+    dog_resize_to(parameters_grad, {(int)fc.size_parameters()}, true);
+    dog_resize_to(feature_map, {N, class_size}, false);
+    dog_resize_to(grad_map, {N, class_size}, false);
+    auto labels = get_labels(data, batch, class_size);
+    for(auto iteration : Range(1)) {
+        cout << grad_map.size() << endl;
+        thrust::fill_n(thrust::device, grad_map.begin(), batch * class_size, 0.0f);
+        fc.forward(feature_map, data, parameters);
+        ce.forward(d_loss, feature_map, labels);
+        float loss;
+        cudaMemcpy(&loss, d_loss, sizeof(float), cudaMemcpyDeviceToHost);
+        // float loss_grad = -0.01f * loss / N;
+        // ce.backward(grad_map, loss_grad, labels);
+        // fc.backward(nullptr, parameters_grad, data, grad_map, parameters);
+        cout << loss << endl;
+    }
 }

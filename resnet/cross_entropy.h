@@ -5,9 +5,9 @@
 
 class CrossEntropy {
   public:
-    CrossEntropy(int class_size, int batch_size)
-        : class_size(class_size),
-          batch_size(batch_size),
+    CrossEntropy(int batch_size, int class_size)
+        : batch_size(batch_size),
+          class_size(class_size),
           dsc_io({batch_size, class_size, 1, 1}) {}
 
     void forward(float *loss, const float *act, const int *labels);
@@ -19,7 +19,7 @@ class CrossEntropy {
     }
 
   private:
-    int class_size;
     int batch_size;
+    int class_size;
     TensorDescriptor dsc_io;
 };
