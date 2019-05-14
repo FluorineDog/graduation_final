@@ -6,11 +6,11 @@ __global__ void nll_loss(float *loss, const float *logits_grad, const int *label
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if(index < N) {
         int class_id = labels[index];
-        atomicAdd(loss, logits_grad[index * C + class_id]);
+        loss[index] =  -logits_grad[index * C + class_id];
     }
 }
 
-__global__ void nll_loss_backward(float *logits_grad, float final, const int *labels,
+__global__ void nll_loss_backward(float *logits_grad, const float* loss_grad, const int *labels,
                                   int C, int N) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
     if(index < N * C) {
@@ -18,7 +18,7 @@ __global__ void nll_loss_backward(float *logits_grad, float final, const int *la
     }
     if(index < N) {
         int class_id = labels[index];
-        logits_grad[index * C + class_id] = final;
+        logits_grad[index * C + class_id] = -0.1 * loss_grad[index];
     }
 }
 
@@ -33,7 +33,7 @@ void CrossEntropy::forward(float *loss, const float *act, const int *labels) {
     // nll_loss
 }
 
-void CrossEntropy::backward(float *act_grad, float loss_grad, const int *labels) {
+void CrossEntropy::backward(float *act_grad, const float* loss_grad, const int *labels) {
     auto kAlgo = CUDNN_SOFTMAX_LOG;
     auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
     float one = 1.0, zero = 0.0;

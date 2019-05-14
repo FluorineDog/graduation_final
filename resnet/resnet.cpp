@@ -1,6 +1,7 @@
 #include "common.h"
 #include "wrapper.h"
 #include "descriptor.h"
+#include <random>
 #include "global.h"
 #include "conv.h"
 #include "../doglib/time/timer.h"
@@ -14,10 +15,11 @@ using dim_t = Dims;
 Global global;
 class A {};
 
-void dog_print(std::string name, device_vector<T>& vec_vec, const dim_t& dim) {
+void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
     cout << name << endl;
     auto sz = get_volume(dim);
     host_vector<T> vec = vec_vec;
+    cudaDeviceSynchronize();
     auto tmp = dim;
     std::reverse(tmp.begin(), tmp.end());
     for(auto index : Range(sz)) {
@@ -35,11 +37,12 @@ void dog_print(std::string name, device_vector<T>& vec_vec, const dim_t& dim) {
 // template <class T>
 void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value = false) {
     auto sz = get_volume(dim);
+    std::default_random_engine e(3);
     vec_vec.resize(sz);
     if(set_value) {
         thrust::host_vector<T> host_vec(sz);
         for(auto id : Range(sz)) {
-            host_vec[id] = (T)(id % 257 / 128.0);
+            host_vec[id] = (T)(e() % 201 / 100.0) - 1;
         }
         vec_vec = host_vec;
     }
@@ -102,7 +105,8 @@ int workload_conv() {
 }
 
 DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_size) {
-    vector<int> tmp; thrust::host_vector<T> h_d(data);
+    vector<int> tmp;
+    thrust::host_vector<T> h_d(data);
 
     for(auto bid : Range(batch)) {
         double sum = 0;
@@ -115,9 +119,9 @@ DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_s
 }
 
 int main() {
-    int N = 256;
+    int N = 1;
     int batch = N;
-    int in_size = 128;
+    int in_size = 4;
     int class_size = 2;
     DeviceVector<T> d_loss;
     DeviceVector<T> data;
@@ -126,26 +130,43 @@ int main() {
     DeviceVector<T> feature_map;
     DeviceVector<T> grad_map;
     FCFunctor fc(batch, in_size, class_size);
-    CrossEntropy ce(class_size, N);
+    CrossEntropy ce(N, class_size);
     global.update_workspace_size(ce.workspace());
 
-    dog_resize_to(d_loss, {1}, true);
+    dog_resize_to(d_loss, {N});
     dog_resize_to(data, {N, in_size}, true);
     dog_resize_to(parameters, {(int)fc.size_parameters()}, true);
     dog_resize_to(parameters_grad, {(int)fc.size_parameters()}, true);
-    dog_resize_to(feature_map, {N, class_size}, false);
+    dog_resize_to(feature_map, {N, class_size}, true);
     dog_resize_to(grad_map, {N, class_size}, false);
-    auto labels = get_labels(data, batch, class_size);
-    for(auto iteration : Range(1)) {
+    auto labels = get_labels(data, batch, in_size);
+
+    for(auto lb: labels){
+        cout << lb << " ";
+    }
+    cout << endl;
+    for(auto iteration : Range(100)) {
         cout << grad_map.size() << endl;
-        thrust::fill_n(thrust::device, grad_map.begin(), batch * class_size, 0.0f);
+        float loss = 0;
+        // thrust::fill_n(thrust::device, d_loss.begin(), 1, 0.0f);
         fc.forward(feature_map, data, parameters);
+        dog_print("feature_map", feature_map, {N, class_size});
         ce.forward(d_loss, feature_map, labels);
-        float loss;
-        cudaMemcpy(&loss, d_loss, sizeof(float), cudaMemcpyDeviceToHost);
-        // float loss_grad = -0.01f * loss / N;
-        // ce.backward(grad_map, loss_grad, labels);
-        // fc.backward(nullptr, parameters_grad, data, grad_map, parameters);
+        // dog_print("d_loss", d_loss, {1});
+
+        ce.backward(grad_map, d_loss, labels);
+        dog_print("gard_map", grad_map, {N, class_size});
+        fc.backward(nullptr, parameters_grad, data, grad_map, parameters);
+        // dog_print("p_gard", parameters_grad, {N, class_size});
+
+        loss = thrust::reduce(thrust::device, d_loss.begin(), d_loss.end());
+        thrust::transform(thrust::device, parameters.begin(), parameters.end(),
+                          parameters_grad.begin(), parameters.begin(),
+                          thrust::plus<float>());
         cout << loss << endl;
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        if(loss < .0000001 ) break;
     }
 }
