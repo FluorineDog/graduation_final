@@ -17,7 +17,6 @@ inline dim_t get_strides(const dim_t& vec) {
     }
     return tmp;
 }
-
 constexpr auto kDataType = CUDNN_DATA_FLOAT;
 constexpr auto kFilterFormat = CUDNN_TENSOR_NCHW;
 class TensorDescriptor {
@@ -106,4 +105,22 @@ class ConvolutionDescriptor {
     const int stride_;
     const int dilation_;
     const int group_;
+};
+
+class ActivationDescriptor{
+  public:
+    explicit ActivationDescriptor(){
+        cudnnCreateActivationDescriptor(&desc_);
+        auto kMode = CUDNN_ACTIVATION_RELU;
+        auto kNan = CUDNN_PROPAGATE_NAN;
+        cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);
+    }
+    ~ActivationDescriptor(){
+        cudnnDestroyActivationDescriptor(desc_);
+    }
+    operator cudnnActivationDescriptor_t() {
+        return desc_;
+    }
+  private:
+    cudnnActivationDescriptor_t desc_;
 };

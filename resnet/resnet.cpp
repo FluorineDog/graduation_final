@@ -8,6 +8,7 @@
 #include "fc.h"
 #include "cross_entropy.h"
 #include "../../../../../usr/local/cuda/include/driver_types.h"
+#include "activation.h"
 
 using std::vector;
 
