@@ -1,8 +1,8 @@
 #include "functor.h"
 
-class Activation {
+class ActivationFunctor {
   public:
-    Activation(dim_t dims) : dsc_io(dims) {}
+    ActivationFunctor(dim_t dims) : dsc_io(dims) {}
     void forward(float* out, const float* in) {
         float alpha = 1.0;
         float beta = 0.0;
