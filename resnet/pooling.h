@@ -5,13 +5,16 @@
 class PoolingFunctor {
   public:
     PoolingFunctor(int H, int W, int padding, int stride)
-        : dsc_pool(H, W, padding, stride) {}
+        : dsc_pool(H, W, padding, stride) {
+            
+    }
     void forward(float* out, const float* in) {
         float alpha = 1.0;
         float beta = 0.0;
         cudnnPoolingForward(global.cudnn_handle(), dsc_pool, &alpha, dsc_in, in, &beta,
                             dsc_out, out);
     }
+    void get_dims_out() {}
     void backward(float* in_grad, const float* in, const float* out_grad,
                   const float* out) {
         float alpha = 1.0;

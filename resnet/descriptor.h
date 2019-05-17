@@ -114,7 +114,7 @@ class ActivationDescriptor {
         cudnnCreateActivationDescriptor(&desc_);
         auto kMode = CUDNN_ACTIVATION_RELU;
         auto kNan = CUDNN_PROPAGATE_NAN;
-        cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);
+        cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);  
     }
     ~ActivationDescriptor() {
         cudnnDestroyActivationDescriptor(desc_);
