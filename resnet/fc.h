@@ -26,10 +26,7 @@ class FCFunctor {
         ones.resize(batch);
         thrust::fill_n(ones.begin(), batch, 1.0);
     }
-    void forward(void* out_, const void* in_, const void* weight_) {
-        auto out = static_cast<float*>(out_);
-        auto in = static_cast<const float*>(in_);
-        auto weight = static_cast<const float*>(weight_);
+    void forward(float* out, const float* in, const float* weight) {
         auto bias = weight + in_size * out_size;
         // add_biased(out, out_size, batch, 1.0, bias);
         // float float_one = 1.0;
@@ -46,8 +43,8 @@ class FCFunctor {
         sgemm(false, false, batch, in_size, out_size, in, weight, out, false);
     }
 
-    void backward(void* in_grad, void* weight_grad, const void* in, const void* out_grad,
-                  const void* weight) {
+    void backward(float* in_grad, float* weight_grad, const float* in, const float* out_grad,
+                  const float* weight) {
         backwardFilter(weight_grad, in, out_grad);
         if(in_grad) {
             backwardData(in_grad, weight, out_grad);
@@ -59,10 +56,7 @@ class FCFunctor {
     }
 
   private:
-    void backwardFilter(void* weight_grad_, const void* in_, const void* out_grad_) {
-        auto in = (const float*)in_;
-        auto out_grad = (const float*)out_grad_;
-        auto weight_grad = static_cast<float*>(weight_grad_);
+    void backwardFilter(float* weight_grad, const float* in, const float* out_grad) {
         auto bias_grad = weight_grad + in_size * out_size;
         // float float_one = 1.0;
         float float_zero = 0.0;
@@ -75,7 +69,7 @@ class FCFunctor {
         cublasSgemv_v2(global.cublas_handle(), CUBLAS_OP_N, out_size, batch, &float_zero,
                        out_grad, out_size, ones, 1, &float_zero, bias_grad, 1);
     }
-    void backwardData(void* in_grad_, const void* weight_, const void* out_grad_) {
+    void backwardData(float* in_grad_, const float* weight_, const float* out_grad_) {
         // in: batchxin: batchxout * in*out
         auto in_grad = static_cast<float*>(in_grad_);
         auto out_grad = static_cast<const float*>(out_grad_);

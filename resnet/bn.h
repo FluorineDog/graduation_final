@@ -8,7 +8,7 @@ class BatchNorm {
         extra.resize(bn_size * 4);
         thrust::fill_n(extra.begin(), extra.size(), 0);
     }
-    void forward(void* out, const void* in, const void* weight) {
+    void forward(float* out, const float* in, const float* weight) {
         float alpha = 1, beta = 0;
         auto bnScale = (T*)weight;
         auto bnBias = 1 * bn_size + (T*)weight;
@@ -25,8 +25,8 @@ class BatchNorm {
     size_t weight_size() {
         return 2 * bn_size;
     }
-    void backward(void* in_grad, void* weight_grad, const void* in, const void* out_grad,
-                  const void* weight) {
+    void backward(float* in_grad, float* weight_grad, const float* in, const float* out_grad,
+                  const float* weight) {
         float alpha = 1, beta = 0;
         auto bnScale = (T*)weight;
         auto bnBias = 1 * bn_size + (T*)weight;
@@ -41,7 +41,7 @@ class BatchNorm {
             out_grad, dsc_io, in_grad, dsc_bn, bnScale, bnScale_grad, bnBias_grad,
             CUDNN_BN_MIN_EPSILON, bnSavedMean, bnSavedVar);
     }
-    
+
   private:
     TensorDescriptor dsc_io;
     TensorDescriptor dsc_bn;

@@ -9,6 +9,9 @@
 #include "cross_entropy.h"
 #include "../../../../../usr/local/cuda/include/driver_types.h"
 #include "activation.h"
+#include "thrust/transform.h"
+#include "thrust/fill.h"
+#include "thrust/device_vector.h"
 
 using std::vector;
 
@@ -115,18 +118,15 @@ DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_s
         for(auto eid : Range(entry_size)) {
             sum += h_d[bid * entry_size + eid];
         }
-        tmp.push_back(sum >=  0);
+        tmp.push_back(sum >= 0);
     }
     return tmp;
 }
 
-struct functor
-{
-  __host__ __device__
-  bool operator()(float x)
-  {
-    return x < 1;
-  }
+struct functor {
+    __host__ __device__ bool operator()(float x) {
+        return x < 1;
+    }
 };
 
 int main() {
@@ -158,7 +158,8 @@ int main() {
     cout << endl;
     for(auto iteration : Range(1000)) {
         float loss = 0;
-        thrust::fill_n(thrust::device, parameters_grad.begin(), in_size * class_size, 0.00233);
+        thrust::fill_n(thrust::device, parameters_grad.begin(), in_size * class_size,
+                       0.00233);
         // dog_print("x", data, {N, in_size});
         // dog_print("Wb", parameters, {1 + in_size, class_size});
         fc.forward(feature_map, data, parameters);
@@ -166,14 +167,14 @@ int main() {
         ce.forward(d_loss, feature_map, labels);
         // dog_print("loss", d_loss, {N});
         loss = thrust::reduce(thrust::device, d_loss.begin(), d_loss.end());
-        int correct = thrust::count_if(thrust::device, d_loss.begin(), d_loss.end(), functor());
-        cout <<  "^^" <<  loss / N  << "%%" << correct << endl;
+        int correct =
+            thrust::count_if(thrust::device, d_loss.begin(), d_loss.end(), functor());
+        cout << "^^" << loss / N << "%%" << correct << endl;
         // cout <<  "^^" <<  loss / N  << endl;
         ce.backward(grad_map, d_loss, labels);
         // dog_print("@y", grad_map, {N, class_size});
         fc.backward(nullptr, parameters_grad, data, grad_map, parameters);
         // dog_print("@Wb", parameters_grad, {1 + in_size, class_size});
-
 
         thrust::transform(thrust::device, parameters.begin(), parameters.end(),
                           parameters_grad.begin(), parameters.begin(),

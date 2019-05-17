@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 #include "wrapper.h"
+#include "global.h"
 using dim_t = Dims;
 
 inline ull get_volume(const dim_t& vec) {
@@ -107,20 +108,41 @@ class ConvolutionDescriptor {
     const int group_;
 };
 
-class ActivationDescriptor{
+class ActivationDescriptor {
   public:
-    explicit ActivationDescriptor(){
+    explicit ActivationDescriptor() {
         cudnnCreateActivationDescriptor(&desc_);
         auto kMode = CUDNN_ACTIVATION_RELU;
         auto kNan = CUDNN_PROPAGATE_NAN;
         cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);
     }
-    ~ActivationDescriptor(){
+    ~ActivationDescriptor() {
         cudnnDestroyActivationDescriptor(desc_);
     }
     operator cudnnActivationDescriptor_t() {
         return desc_;
     }
+
   private:
     cudnnActivationDescriptor_t desc_;
+};
+
+class PoolingDescriptor {
+  public:
+    explicit PoolingDescriptor(int H, int W, int padding, int stride) {
+        cudnnCreatePoolingDescriptor(&desc_);
+        auto kMode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+        auto kNan = CUDNN_PROPAGATE_NAN;
+        cudnnSetPooling2dDescriptor(desc_, kMode, kNan, H, W, padding, padding, stride,
+                                    stride);
+    }
+    ~PoolingDescriptor() {
+        cudnnDestroyPoolingDescriptor(desc_);
+    }
+    operator cudnnPoolingDescriptor_t() {
+        return desc_;
+    }
+
+  private:
+    cudnnPoolingDescriptor_t desc_;
 };

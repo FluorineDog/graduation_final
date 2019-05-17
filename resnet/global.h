@@ -21,10 +21,11 @@ class Global {
         return blas_handle_;
     }
 
-    void* get_workspace() {
+    float* get_workspace() {
         return workspace_.data().get();
     }
     void update_workspace_size(size_t size) {
+        size = (size + sizeof(float)) / sizeof(float);
         if(size > workspace_.size()) {
             workspace_.resize(size + size / 2);
         }
@@ -34,7 +35,7 @@ class Global {
     }
 
   private:
-    device_vector<char> workspace_;
+    device_vector<float> workspace_;
     cudnnHandle_t cudnn_handle_;
     cublasHandle_t blas_handle_;
 };
