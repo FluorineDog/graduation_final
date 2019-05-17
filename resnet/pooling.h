@@ -16,12 +16,11 @@ class PoolingFunctor {
                   const float* out) {
         float alpha = 1.0;
         float beta = 0.0;
-        cudnnPoolingBackward(global.cudnn_handle(), dsc_pool, &alpha, dsc_out, out, dsc_out,
-                             out_grad, dsc_in, in, &beta, dsc_in, in_grad);
+        cudnnPoolingBackward(global.cudnn_handle(), dsc_pool, &alpha, dsc_out, out,
+                             dsc_out, out_grad, dsc_in, in, &beta, dsc_in, in_grad);
     }
 
   private:
-    void backward() {}
     PoolingDescriptor dsc_pool;
     TensorDescriptor dsc_in;
     TensorDescriptor dsc_out;
