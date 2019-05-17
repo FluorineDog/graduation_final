@@ -5,15 +5,15 @@
 
 using namespace doglib::graph;
 
-enum class Plan{
-    add_2,
-    add_2_backward,
-    forward, 
-    backward, 
-    alloc,
-    free,
-    total_
+// the graph is just a driver, execute it!
+class ExecutorBase{
+  public: 
+    virtual void execute();
 };
+
+
+
+
 
 class Engine {
   public:
@@ -36,8 +36,8 @@ class Engine {
         dest_node = dest;
         backward_graph = transpose(forward_graph);
     }
-    void virtual_forward(float* logits, const float* input) {
-        
+    void forward(float* logits, const float* input) {
+         
     }
     static constexpr int src_node = 0;
     int dest_node = -1;
@@ -50,6 +50,7 @@ class Engine {
 
 enum class Mode { Collect, Optimized };
 
+// stupid version
 class MemoryManager {
   public:
     void init() {}
@@ -58,6 +59,9 @@ class MemoryManager {
             mapping[id].resize(size);
         }
         return mapping[id];
+    }
+    void unused(int id) {
+        // do nothing 
     }
     void free(int id) {}
     void terminate() {
