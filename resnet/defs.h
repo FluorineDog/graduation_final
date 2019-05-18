@@ -6,7 +6,7 @@
 #include "activation.h"
 
 struct NodeBase {
-    virtual void visit(class Visitor&) = 0;
+    virtual void visit(class Visitor&){}
     virtual ~NodeBase() = default;
     int size;
 };
@@ -47,7 +47,7 @@ struct PlaceHolderNode: NodeBase {
     void visit(Visitor& v) override {
         return v.visit(*this);
     }
-}l;
+};
 
 struct VariableNode: NodeBase {
     VariableNode(int x):node_id(x) {}

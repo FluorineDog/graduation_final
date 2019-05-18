@@ -47,8 +47,8 @@ class Engine {
 
     void define_net() {
         auto x = insert_leaf();
-        nodes.template emplace<PlaceHolderNode>(x, x);
-         
+        nodes.emplace(x, std::make_unique<PlaceHolderNode>(x));
+        
     }
 
     int insert_leaf() {
@@ -72,9 +72,6 @@ class Engine {
     
     }
 
-    float* get(int id){
-
-    }
     void finish_off(int dest) {
         dest_node = dest;
         backward_graph = transpose(forward_graph);
@@ -87,7 +84,7 @@ class Engine {
     
     DynamicGraph forward_graph;
     DynamicGraph backward_graph;
-    std::map<int, NodeBase> nodes;
+    std::map<int, std::unique_ptr<NodeBase>> nodes;
     MemoryManager mm;
 };
 

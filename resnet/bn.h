@@ -1,11 +1,12 @@
 #pragma once
-#include "functor.h"
+#include "descriptor.h"
+
 class BatchNorm {
   public:
     static constexpr auto kMode = CUDNN_BATCHNORM_SPATIAL_PERSISTENT;
     BatchNorm(dim_t dims) : dsc_io(dims), fwd_counter(0) {
         cudnnDeriveBNTensorDescriptor(dsc_bn, dsc_io, kMode);
-        this->bn_size = get_volume(dsc_bn.dims);
+        this->bn_size = get_volume(dsc_bn.dims());
         extra.resize(bn_size * 4);
         thrust::fill_n(extra.begin(), extra.size(), 0);
     }
@@ -30,11 +31,9 @@ class BatchNorm {
                   const float* weight) {
         float alpha = 1, beta = 0;
         auto bnScale = (T*)weight;
-        auto bnBias = 1 * bn_size + (T*)weight;
+        // auto bnBias = 1 * bn_size + (T*)weight;
         auto bnScale_grad = (T*)weight_grad;
         auto bnBias_grad = 1 * bn_size + (T*)weight_grad;
-        // auto bnRunningMean = (T*)extra;
-        // auto bnRunningVar = 1 * bn_size + (T*)extra;
         auto bnSavedMean = 2 * bn_size + (T*)extra;
         auto bnSavedVar = 3 * bn_size + (T*)extra;
         cudnnBatchNormalizationBackward(
