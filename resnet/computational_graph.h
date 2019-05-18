@@ -3,8 +3,21 @@
 #include "common.h"
 #include "../doglib/graph/graph.h"
 #include "../doglib/graph/procedure.h"
-#include <optional>
-
+#include <random>
+// template <class T>
+void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
+                   bool set_value = false) {
+    auto sz = get_volume(dim);
+    std::default_random_engine e(3);
+    vec_vec.resize(sz);
+    thrust::host_vector<float> host_vec(sz, 0);
+    if(set_value) {
+        for(auto id : Range(sz)) {
+            host_vec[id] = e() % 2001 / 1000.0 - 1;
+        }
+    }
+    vec_vec = host_vec;
+}
 
 using namespace doglib::graph;
 
@@ -24,16 +37,17 @@ class MemoryManager {
         assert(mapping.count(id));
         return mapping[id];
     }
-    void register_weight(int id, size_t size) {
-        assert(weights.count(id) == 0);
-        weights[id].resize(size);
+    void* register_weight(int id, int size) {
+        weight_offsets[id] = total_weight;
+        total_weight += size;
     }
     float* get_weight(int id) {
-        assert(weights.count(id));
-        return weights[id];
+        auto offset = weight_offsets[id];
+        return weight.data().get() + offset;
     }
-    void finish(int id) {
-        // do nothing
+    void finish_weight(int id) {
+        dog_resize_to(weight, {(int)total_weight}, true);
+        dog_resize_to(weight_grad, {(int)total_weight}, false);
     }
     void free(int id) {}
     void terminate() {
@@ -43,7 +57,10 @@ class MemoryManager {
   private:
     std::map<int, DeviceVector<float>> mapping;
     std::map<int, DeviceVector<float>> gradients;
-    std::map<int, DeviceVector<float>> weights;
+    std::map<int, size_t> weight_offsets;
+    size_t total_weight = 0;
+    device_vector<float> weight;
+    device_vector<float> weight_grad;
 };
 
 // graph executor, in one place
@@ -53,28 +70,15 @@ class Engine {
         // src_node and dest_node is here waiting
     }
 
-    void define_net() {
-        int B = 128;
-        dim_t input_dim = {B, 1000};
-        auto x = insert_leaf<PlaceHolderNode>(input_dim);
-        this->src_node = x;
-        auto shortcut = x;
-        x = this->insert_node<FCNode>(x, B, 1000, 1000);
-        x = this->insert_node<ActivationNode>(x, dim_t{B, 1000});
-        x = this->insert_node<FCNode>(x, B, 1000, 1000);
-        x = this->insert_node<ActivationNode>(x, dim_t{B, 1000});
-        x = this->insert_node<AddNode>(x, shortcut, dim_t{B, 1000});
-        x = this->insert_blend<FCNode>(x, B, 2);
-        this->dest_node = x;
-    }
-
     void prepare_feature_maps();
+    void prepare_gradient_maps();    // (todo)
+    void register_weight_maps();     //: better with hashtable
 
     void finish_off() {
         backward_graph = transpose(forward_graph);
-        void prepare_feature_maps();
-        void prepare_gradient_maps();    // (todo)
-        void register_weight_maps();     //: better with hashtable
+        prepare_feature_maps();
+        prepare_gradient_maps();    // (todo)
+        register_weight_maps();     //: better with hashtable
     }
     template <class T, class... Arg>
     int insert_leaf(Arg... args) {

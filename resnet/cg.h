@@ -39,13 +39,14 @@ class MetaVisitor : public Visitor {
         return weight_sz;
     }
 
+  private:
     dim_t map_dim;
     size_t weight_sz;
 };
 
 class ForwardVisitor : public Visitor {
   public:
-    ForwardVisitor(Engine& eng) : eng(eng) {}
+    ForwardVisitor(Engine& eng) : eng(eng), input_(nullptr) {}
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
         auto out = mm.get(n.out_id);
@@ -64,7 +65,7 @@ class ForwardVisitor : public Visitor {
         //
         assert(n.node_id == 0);
         auto dev_p = eng.get_mm().get(n.node_id);
-        cudaMemcpy(dev_p, input_indicator, n.size, cudaMemcpyDefault);
+        cudaMemcpy(dev_p, input_, n.size, cudaMemcpyDefault);
     }
 
     virtual void visit(AddNode& n) override {
@@ -75,7 +76,12 @@ class ForwardVisitor : public Visitor {
         auto b = mm.get(n.b_id);
         thrust::transform(a, a + n.size, b, out, thrust::plus<float>());
     }
-    float* input_indicator;
+    void set(float* input) {
+        input_ = input;
+    }
+
+  private:
+    float* input_;
     Engine& eng;
 };
 

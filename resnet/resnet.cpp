@@ -40,19 +40,7 @@ void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
     cout << endl << "##########" << endl;
 }
 
-// template <class T>
-void dog_resize_to(device_vector<T>& vec_vec, const dim_t& dim, bool set_value = false) {
-    auto sz = get_volume(dim);
-    std::default_random_engine e(3);
-    vec_vec.resize(sz);
-    if(set_value) {
-        thrust::host_vector<T> host_vec(sz);
-        for(auto id : Range(sz)) {
-            host_vec[id] = e() % 2001 / 1000.0 - 1;
-        }
-        vec_vec = host_vec;
-    }
-}
+
 
 // int workload_conv() {
 //     using T = float;
