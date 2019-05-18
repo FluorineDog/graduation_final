@@ -1,3 +1,4 @@
+#pragma once
 #include "functor.h"
 class BatchNorm {
   public:

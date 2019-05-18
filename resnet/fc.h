@@ -1,3 +1,4 @@
+#pragma once
 #include "functor.h"
 #include "cublas.h"
 #include "cu_extra.h"

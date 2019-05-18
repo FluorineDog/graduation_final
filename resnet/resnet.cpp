@@ -12,6 +12,7 @@
 #include "thrust/transform.h"
 #include "thrust/fill.h"
 #include "thrust/device_vector.h"
+#include "computational_graph.h"
 
 using std::vector;
 

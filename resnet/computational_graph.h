@@ -1,3 +1,4 @@
+#pragma once
 #include "defs.h"
 #include "common.h"
 #include "../doglib/graph/graph.h"
@@ -46,8 +47,8 @@ class Engine {
 
     void define_net() {
         auto x = insert_leaf();
-        nodes.emplace(x, PlaceHolderNode(x));
-        a
+        nodes.template emplace<PlaceHolderNode>(x, x);
+         
     }
 
     int insert_leaf() {
