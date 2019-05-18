@@ -46,28 +46,36 @@ class Engine {
     }
 
     void define_net() {
-        auto x = insert_leaf();
-        nodes.emplace(x, std::make_unique<PlaceHolderNode>(x));
+        auto x = insert_leaf<PlaceHolderNode>();
+        // nodes.emplace(x, std::make_unique<PlaceHolderNode>(x));
+        // x = insert_node(x);
         
     }
 
-    int insert_leaf() {
+    template<class T, class ... Arg>  
+    int insert_leaf(Arg... args) {
         auto id = forward_graph.new_vertex();
+        nodes.emplace(id, std::make_unique<T>(id, args...));
         return id;
     }
 
-    int insert_node(int parent){
+    template<class T, class ... Arg>  
+    int insert_node(int parent, Arg... args){
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(parent, id);
+        nodes.emplace(id, std::make_unique<T>(parent, id, args...));
         return id;
     }
 
-    int insert_blend(int a, int b){
+    template<class T, class ... Arg>  
+    int insert_blend(int a, int b, Arg... args){
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(a, id);
         forward_graph.add_edge(b, id);
+        nodes.emplace(id, std::make_unique<T>(a, b, id, args...));
         return id;
     }
+
     void forward_pass(){
     
     }
