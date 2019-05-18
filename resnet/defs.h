@@ -15,7 +15,8 @@ class Visitor {
     virtual void visit(class FCNode&) = 0;
     virtual void visit(class ActivationNode&) = 0;
     virtual void visit(class PlaceHolderNode&) = 0;
-    virtual void visit(class VariableNode&) = 0;
+    // virtual void visit(class VariableNode&) = 0;
+    virtual void visit(class AddNode&) = 0;
     // virtual void visit(class BatchNormNode& ) = 0;
     ~Visitor() = default;
 };
@@ -32,6 +33,15 @@ struct FCNode : NodeBase {
     }
 };
 
+struct AddNode : NodeBase {
+    AddNode(int a_id, int b_id, int out_id, dim_t dim)
+        : a_id(a_id), b_id(b_id), out_id(out_id), size(get_volume(dim)) {}
+    int a_id;
+    int b_id;
+    int out_id;
+    size_t size;
+};
+
 struct ActivationNode : NodeBase {
     ActivationNode(int in_id, int out_id, dim_t dim)
         : in_id(in_id), out_id(out_id), functor(dim) {}
@@ -44,17 +54,10 @@ struct ActivationNode : NodeBase {
 };
 
 struct PlaceHolderNode : NodeBase {
-    PlaceHolderNode(int x, dim_t dim) : node_id(x), dim(dim) {}
+    PlaceHolderNode(int x, dim_t dim) : node_id(x), dim(dim), size(get_volume(dim)) {}
     int node_id;
     dim_t dim;
-    void visit(Visitor& v) override {
-        return v.visit(*this);
-    }
-};
-
-struct VariableNode : NodeBase {
-    VariableNode(int x) : node_id(x) {}
-    int node_id;
+    int size;
     void visit(Visitor& v) override {
         return v.visit(*this);
     }

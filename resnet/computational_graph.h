@@ -22,9 +22,17 @@ class MemoryManager {
         }
         return mapping[id];
     }
-    float* get(int id){
+    float* get(int id) {
         assert(mapping.count(id));
         return mapping[id];
+    }
+    float* register_weight(int id, size_t size) {
+        assert(weights.count(id) == 0);
+        weights[id].resize(size);
+    }
+    float* get_weight(int id){
+        assert(weights.count(id));
+        return weights[id];
     }
     void finish(int id) {
         // do nothing
@@ -36,6 +44,7 @@ class MemoryManager {
 
   private:
     std::map<int, DeviceVector<float>> mapping;
+    std::map<int, DeviceVector<float>> weights;
 };
 
 // graph executor, in one place
@@ -46,7 +55,15 @@ class Engine {
     }
 
     void define_net() {
+        int B = 128;
+        dim_t input_dim = {B, 1000};
         auto x = insert_leaf<PlaceHolderNode>();
+        this->input_node = 0;
+        x = this->insert_node<FCNode>(x, B, 1000, 1000);
+        x = this->insert_node<ActivationNode>(x, dim_t{B, 1000});
+        x = this->insert_node<FCNode>(x, B, 1000, 1000);
+        x = this->insert_node<ActivationNode>(x, dim_t{B, 1000});
+        x = this->insert_blend<FCNode>(x, B, 1)
         // nodes.emplace(x, std::make_unique<PlaceHolderNode>(x));
         // x = insert_node(x);
         
@@ -88,7 +105,8 @@ class Engine {
         return mm;
     }
     
-    int dest_node = -1;
+    int dest_node;
+    int input_node;
     
     DynamicGraph forward_graph;
     DynamicGraph backward_graph;
