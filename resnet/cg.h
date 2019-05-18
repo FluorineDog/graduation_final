@@ -2,8 +2,50 @@
 #include "computational_graph.h"
 #include "defs.h"
 
+class MetaVisitor : public Visitor {
+  public:
+    virtual void visit(FCNode& n) override {
+        weight_sz = n.functor.size_parameters();
+        map_dim = n.functor.out_dim();
+    }
+    virtual void visit(ActivationNode& n) override {
+        weight_sz = 0;
+        map_dim = n.functor.out_dim();
+    }
+    virtual void visit(PlaceHolderNode& n) override {
+        weight_sz = 0;
+        map_dim = n.dim;
+    }
+    virtual void visit(AddNode& n) override {
+        weight_sz = 0;
+        map_dim = n.dim;
+    }
+    struct Meta {
+        size_t weight_sz;
+        dim_t map_dim;
+    };
+
+    Meta analyse(NodeBase& node) {
+        node.accept(*this);
+        return Meta{weight_sz, map_dim};
+    }
+
+    dim_t out_dim(NodeBase& node) {
+        node.accept(*this);
+        return map_dim;
+    }
+
+    size_t weight_size(NodeBase& node) {
+        return weight_sz;
+    }
+
+    dim_t map_dim;
+    size_t weight_sz;
+};
+
 class ForwardVisitor : public Visitor {
   public:
+    ForwardVisitor(Engine& eng) : eng(eng) {}
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
         auto out = mm.get(n.out_id);
@@ -43,39 +85,4 @@ class FakeVisitor : public Visitor {
     virtual void visit(ActivationNode& n) override {}
     virtual void visit(PlaceHolderNode& n) override {}
     virtual void visit(AddNode& n) override {}
-};
-
-class MetaVisitor : public Visitor {
-  public:
-    virtual void visit(FCNode& n) override {
-        weight_sz = n.functor.size_parameters();
-        map_dim = n.functor.out_dim();
-    }
-    virtual void visit(ActivationNode& n) override {
-        weight_sz = 0;
-        map_dim = n.functor.out_dim();
-    }
-    virtual void visit(PlaceHolderNode& n) override {
-        weight_sz = 0;
-        map_dim = n.dim;
-    }
-    virtual void visit(AddNode& n) override {
-        weight_sz = 0;
-        map_dim = n.dim;
-    }
-    struct Meta{
-        size_t weight_sz;
-        dim_t map_dim; 
-        size_t size(){
-            return get_volume(map_dim);
-        }
-    };
-
-    Meta analyse(NodeBase& node) {
-        node.accept(*this);
-        return Meta{weight_sz, map_dim};
-    }
-
-    size_t weight_sz;
-    dim_t map_dim;
 };

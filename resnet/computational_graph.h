@@ -5,6 +5,7 @@
 #include "../doglib/graph/procedure.h"
 #include <optional>
 
+
 using namespace doglib::graph;
 
 //  stupid version
@@ -55,7 +56,7 @@ class Engine {
     void define_net() {
         int B = 128;
         dim_t input_dim = {B, 1000};
-        auto x = insert_leaf<PlaceHolderNode>();
+        auto x = insert_leaf<PlaceHolderNode>(input_dim);
         this->src_node = x;
         auto shortcut = x;
         x = this->insert_node<FCNode>(x, B, 1000, 1000);
@@ -67,13 +68,7 @@ class Engine {
         this->dest_node = x;
     }
 
-    void prepare_feature_maps(){
-        
-        for(auto& [id, node]: nodes){
-            
-            mm.register_map();
-        }
-    }
+    void prepare_feature_maps();
 
     void finish_off() {
         backward_graph = transpose(forward_graph);
