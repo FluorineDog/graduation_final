@@ -6,7 +6,7 @@
 #include "activation.h"
 
 struct NodeBase {
-    virtual void visit(class Visitor&) {}
+    virtual void accept(class Visitor&) {}
     virtual ~NodeBase() = default;
 };
 
@@ -28,17 +28,18 @@ struct FCNode : NodeBase {
     int in_id;
     int out_id;
     FCFunctor functor;
-    void visit(Visitor& v) override {
+    void accept(Visitor& v) override {
         return v.visit(*this);
     }
 };
 
 struct AddNode : NodeBase {
     AddNode(int a_id, int b_id, int out_id, dim_t dim)
-        : a_id(a_id), b_id(b_id), out_id(out_id), size(get_volume(dim)) {}
+        : a_id(a_id), b_id(b_id), out_id(out_id), dim(dim), size(get_volume(dim)) {}
     int a_id;
     int b_id;
     int out_id;
+    dim_t dim;
     size_t size;
 };
 
@@ -48,7 +49,7 @@ struct ActivationNode : NodeBase {
     int in_id;
     int out_id;
     ActivationFunctor functor;
-    void visit(Visitor& v) override {
+    void accept(Visitor& v) override {
         return v.visit(*this);
     }
 };
@@ -58,7 +59,9 @@ struct PlaceHolderNode : NodeBase {
     int node_id;
     dim_t dim;
     int size;
-    void visit(Visitor& v) override {
+    void accept(Visitor& v) override {
         return v.visit(*this);
     }
 };
+
+// todo batchnorm, pooling, conv

@@ -18,7 +18,9 @@ class ActivationFunctor {
         cudnnActivationBackward(global.cudnn_handle(), dsc_act, &alpha, dsc_io, out,
                                 dsc_io, out_grad, dsc_io, in, &beta, dsc_io, in_grad);
     }
-
+    dim_t out_dim(){
+        return dsc_io.dims();
+    }
   private:
     ActivationDescriptor dsc_act;
     TensorDescriptor dsc_io;

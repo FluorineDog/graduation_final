@@ -44,8 +44,8 @@ class FCFunctor {
         sgemm(false, false, batch, in_size, out_size, in, weight, out, false);
     }
 
-    void backward(float* in_grad, float* weight_grad, const float* in, const float* out_grad,
-                  const float* weight) {
+    void backward(float* in_grad, float* weight_grad, const float* in,
+                  const float* out_grad, const float* weight) {
         backwardFilter(weight_grad, in, out_grad);
         if(in_grad) {
             backwardData(in_grad, weight, out_grad);
@@ -54,6 +54,9 @@ class FCFunctor {
 
     size_t size_parameters() {
         return in_size * out_size + out_size;
+    }
+    dim_t out_dim() {
+        return dim_t{batch, out_size};
     }
 
   private:
