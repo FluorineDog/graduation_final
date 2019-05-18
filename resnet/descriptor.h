@@ -28,6 +28,8 @@ class TensorDescriptor {
     explicit TensorDescriptor(dim_t dims) : TensorDescriptor() {
         init(dims);
     }
+    TensorDescriptor(const TensorDescriptor&) = delete;
+    TensorDescriptor& operator=(const TensorDescriptor&) = delete;
     operator cudnnTensorDescriptor_t() {
         return desc_;
     }
@@ -57,6 +59,9 @@ class FilterDescriptor {
     explicit FilterDescriptor(dim_t dims) : FilterDescriptor() {
         init(dims);
     }
+
+    FilterDescriptor(const FilterDescriptor&) = delete;
+    FilterDescriptor& operator=(const FilterDescriptor&) = delete;
     operator cudnnFilterDescriptor_t() {
         return desc_;
     }
@@ -85,6 +90,8 @@ class ConvolutionDescriptor {
         cudnnCreateConvolutionDescriptor(&desc_);
         init();
     }
+    ConvolutionDescriptor(const ConvolutionDescriptor&) = delete;
+    ConvolutionDescriptor& operator=(const ConvolutionDescriptor&) = delete;
     operator cudnnConvolutionDescriptor_t() {
         return desc_;
     }
@@ -116,6 +123,8 @@ class ActivationDescriptor {
         auto kNan = CUDNN_PROPAGATE_NAN;
         cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);  
     }
+    ActivationDescriptor(const ActivationDescriptor&) = delete;
+    ActivationDescriptor& operator=(const ActivationDescriptor&) = delete;
     ~ActivationDescriptor() {
         cudnnDestroyActivationDescriptor(desc_);
     }
@@ -136,6 +145,8 @@ class PoolingDescriptor {
         cudnnSetPooling2dDescriptor(desc_, kMode, kNan, H, W, padding, padding, stride,
                                     stride);
     }
+    PoolingDescriptor(const PoolingDescriptor&) = delete;
+    PoolingDescriptor& operator=(const PoolingDescriptor&) = delete;
     ~PoolingDescriptor() {
         cudnnDestroyPoolingDescriptor(desc_);
     }

@@ -21,6 +21,10 @@ class MemoryManager {
         }
         return mapping[id];
     }
+    float* get(int id){
+        assert(mapping.count(id));
+        return mapping[id];
+    }
     void finish(int id) {
         // do nothing
     }
@@ -36,21 +40,39 @@ class MemoryManager {
 // graph executor, in one place
 class Engine {
   public:
-    Engine() : forward_graph(1), backward_graph(0) {
+    Engine() : forward_graph(0), backward_graph(0) {
         // src_node and dest_node is here waiting
     }
 
-    int insert(int parent, NodeBase&& functor) {
-        int res_id = forward_graph.new_vertex();
-        forward_graph.add_edge(parent, res_id);
-        functors.emplace(res_id, std::move(functor));
-        return res_id;
+    void define_net() {
+        auto x = insert_leaf();
+        nodes.emplace(x, PlaceHolderNode(x));
+        a
     }
+
+    int insert_leaf() {
+        auto id = forward_graph.new_vertex();
+        return id;
+    }
+
+    int insert_node(int parent){
+        auto id = forward_graph.new_vertex();
+        forward_graph.add_edge(parent, id);
+        return id;
+    }
+
+    int insert_blend(int a, int b){
+        auto id = forward_graph.new_vertex();
+        forward_graph.add_edge(a, id);
+        forward_graph.add_edge(b, id);
+        return id;
+    }
+    void forward_pass(){
     
-    int blend_add(int a, int b) {
-        int res_id = forward_graph.new_vertex();
-        forward_graph.add_edge(a, res_id);
-        forward_graph.add_edge(b, res_id);
+    }
+
+    float* get(int id){
+
     }
     void finish_off(int dest) {
         dest_node = dest;
@@ -59,12 +81,12 @@ class Engine {
     MemoryManager& get_mm(){
         return mm;
     }
-    static constexpr int src_node = 0;
+    
     int dest_node = -1;
-
+    
     DynamicGraph forward_graph;
     DynamicGraph backward_graph;
-    std::map<int, class NodeBase> functors;
+    std::map<int, NodeBase> nodes;
     MemoryManager mm;
 };
 
