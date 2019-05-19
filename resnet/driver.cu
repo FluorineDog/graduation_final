@@ -41,7 +41,7 @@ int main() {
     Engine eng;
     // define network structure
     int B = 128;
-    int features = 128;
+    int features = 256;
     int hidden = features;
     int classes = 2;
     dim_t input_dim = {B, features};
