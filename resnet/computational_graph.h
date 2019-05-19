@@ -1,6 +1,6 @@
 #pragma once
-#include "defs.h"
-#include "common.h"
+#include "helper/defs.h"
+#include "helper/common.h"
 #include "../doglib/graph/graph.h"
 #include "../doglib/graph/procedure.h"
 #include <random>

@@ -1,7 +1,7 @@
 #pragma once
-#include "common.h"
-#include "wrapper.h"
-#include "global.h"
+#include "helper/common.h"
+#include "helper/wrapper.h"
+#include "helper/global.h"
 using dim_t = Dims;
 
 inline ull get_volume(const dim_t& vec) {

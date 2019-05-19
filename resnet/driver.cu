@@ -1,6 +1,6 @@
 #include "../doglib/graph/procedure.h"
 #include "cg.h"
-#include "cross_entropy.h"
+#include "components/cross_entropy.h"
 #include <random>
 
 Global global;

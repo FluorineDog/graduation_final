@@ -1,9 +1,9 @@
 #pragma once
-#include "descriptor.h"
+#include "../descriptor.h"
 #include "global.h"
-#include "fc.h"
-#include "bn.h"
-#include "activation.h"
+#include "../components/fc.h"
+#include "../components/bn.h"
+#include "../components/activation.h"
 
 struct NodeBase {
     virtual void accept(class Visitor&) = 0;

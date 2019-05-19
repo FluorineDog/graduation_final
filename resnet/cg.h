@@ -1,6 +1,6 @@
 #pragma once
 #include "computational_graph.h"
-#include "defs.h"
+#include "helper/defs.h"
 
 class MetaVisitor : public Visitor {
   public:

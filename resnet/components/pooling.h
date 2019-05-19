@@ -1,6 +1,6 @@
 #pragma once
-#include "common.h"
-#include "descriptor.h"
+#include "../helper/common.h"
+#include "../descriptor.h"
 
 class PoolingFunctor {
   public:

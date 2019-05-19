@@ -1,8 +1,8 @@
 #pragma once
 #include <math.h>
 #include <cudnn.h>
-#include "global.h"
-#include "descriptor.h"
+#include "../helper/global.h"
+#include "../descriptor.h"
 
 class CrossEntropy {
   public:
