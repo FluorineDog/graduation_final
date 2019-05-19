@@ -41,11 +41,14 @@ int main() {
         int label = sum > 1000 ? 1:0;
         labels.push_back(label);
     }
+
+
     device_vector<int> dev_labels = labels;
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes); 
     global.update_workspace_size(ce.workspace());
 
+    eng.zero_grad();
     eng.forward_pass(input.data());
     auto act = eng.get_ptr(eng.dest_node);
     auto act_grad = eng.get_ptr(~eng.dest_node);

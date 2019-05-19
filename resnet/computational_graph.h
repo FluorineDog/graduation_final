@@ -72,10 +72,16 @@ class MemoryManager {
     void terminate() {
         mapping.clear();
     }
+    void zero_grad(){
+        for(auto pr: mapping){
+            auto& vec = pr.second;
+            thrust::fill(vec.begin(), vec.end(), 0);
+        }
+        thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
+    }
 
   private:
     std::map<int, DeviceVector<float>> mapping;
-    std::map<int, DeviceVector<float>> gradients;
     std::map<int, size_t> weight_offsets;
     size_t total_weight = 0;
     device_vector<float> weight;
@@ -125,6 +131,9 @@ class Engine {
 
     void forward_pass(float* input);
     void backward_pass(float* logits_grad);
+    void zero_grad(){
+        mm.zero_grad();
+    }
 
     MemoryManager& get_mm() {
         return mm;
