@@ -28,7 +28,7 @@ void Engine::register_weight_maps() {
         auto size = meta.weight_size(node);
         mm.register_weight(id, size);
     });
-    dfs.execute_at(src_node);
+    dfs.execute_at(dest_node);
 }
 
 void Engine::forward_pass(float* input) {
@@ -39,7 +39,7 @@ void Engine::forward_pass(float* input) {
         auto& node = *this->nodes[id];
         node.accept(fwd);
     });
-    dfs.execute_at(src_node);
+    dfs.execute_at(dest_node);
 }
 
 void Engine::backward_pass(float* act_grad) {
@@ -52,5 +52,5 @@ void Engine::backward_pass(float* act_grad) {
         auto& node = *nodes[id];
         node.accept(bwd);
     });
-    dfs.execute_at(dest_node);
+    dfs.execute_at(src_node);
 }

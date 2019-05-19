@@ -42,7 +42,7 @@ int main() {
     // define network structure
     int B = 7;
     int features = 17;
-    int hidden = 9;
+    int hidden = features;
     int classes = 2;
     dim_t input_dim = {B, features};
 
@@ -91,12 +91,12 @@ int main() {
         auto act_grad = eng.get_ptr(~eng.dest_node);
         ce.forward(losses, act, dev_labels.data().get());
         auto loss = thrust::reduce(losses.begin(), losses.end());
+        ce.backward(act_grad, losses, dev_labels.data().get());
         
         dog_print("##", act, dim_t{B, classes});
-        dog_print("SS", act, dim_t{B, classes});
+        dog_print("SS", act_grad, dim_t{B, classes});
         // dog_print("hhd", act, {B});
         
-        // ce.backward(act_grad, losses, dev_labels.data().get());
         // eng.backward_pass(act_grad);
         int correct = thrust::count_if(losses.begin(), losses.end(), functor());
         eng.step();
