@@ -13,7 +13,7 @@ inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
     thrust::host_vector<float> host_vec(sz, 0);
     if(set_value) {
         for(auto id : Range(sz)) {
-            host_vec[id] = (e() % 2001 / 1000.0 - 1) * 0.1;
+            host_vec[id] = (e() % 2001 / 1000.0 - 1) * 0.01;
         }
     }
     vec_vec = host_vec;
