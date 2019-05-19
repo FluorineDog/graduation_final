@@ -75,7 +75,7 @@ class ForwardVisitor : public Visitor {
         auto out = mm.get(n.out_id);
         auto a = mm.get(n.a_id);
         auto b = mm.get(n.b_id);
-        thrust::transform(a, a + n.size, b, out, thrust::plus<float>());
+        thrust::transform(thrust::device, a, a + n.size, b, out, thrust::plus<float>());
     }
     void set(float* input) {
         input_ = input;
@@ -94,12 +94,9 @@ class FakeVisitor : public Visitor {
     virtual void visit(AddNode& n) override {}
 };
 
-
 class BackwardVisitor : public Visitor {
   public:
-    BackwardVisitor(Engine& eng):eng(eng){
-        
-    }
+    BackwardVisitor(Engine& eng) : eng(eng) {}
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
         auto out = mm.get(n.out_id);
@@ -127,8 +124,10 @@ class BackwardVisitor : public Visitor {
         auto a_g = mm.get(~n.a_id);
         auto b_g = mm.get(~n.b_id);
         auto out_grad = mm.get(~n.out_id);
-        thrust::transform(a_g, a_g + n.size, out_grad, a_g, thrust::plus<double>());
-        thrust::transform(b_g, b_g + n.size, out_grad, b_g, thrust::plus<double>());
+        thrust::transform(thrust::device, a_g, a_g + n.size, out_grad, a_g,
+                          thrust::plus<double>());
+        thrust::transform(thrust::device, b_g, b_g + n.size, out_grad, b_g,
+                          thrust::plus<double>());
     }
     Engine& eng;
 };
