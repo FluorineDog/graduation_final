@@ -6,7 +6,7 @@
 #include "activation.h"
 
 struct NodeBase {
-    virtual void accept(class Visitor&) {}
+    virtual void accept(class Visitor&) = 0;
     virtual ~NodeBase() = default;
 };
 
@@ -41,6 +41,9 @@ struct AddNode : NodeBase {
     int out_id;
     dim_t dim;
     size_t size;
+    void accept(Visitor& v) override {
+        return v.visit(*this);
+    }
 };
 
 struct ActivationNode : NodeBase {

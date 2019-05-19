@@ -93,3 +93,15 @@ class FakeVisitor : public Visitor {
     virtual void visit(PlaceHolderNode& n) override {}
     virtual void visit(AddNode& n) override {}
 };
+
+
+class BackwardVisitor : public Visitor {
+  public:
+    virtual void visit(FCNode& n) override {
+        auto& mm = eng.get_mm();
+        auto out = mm.get(n.out_id);
+    }
+    virtual void visit(ActivationNode& n) override {}
+    virtual void visit(PlaceHolderNode& n) override {}
+    virtual void visit(AddNode& n) override {}
+};

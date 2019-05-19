@@ -50,6 +50,6 @@ int main() {
     auto act = eng.get_ptr(eng.dest_node);
     auto act_grad = eng.get_ptr(~eng.dest_node);
     ce.forward(losses, act, dev_labels.data().get());
-    // ce.backward(act_grad, losses, dev_labels.data().get());
-    
+    ce.backward(act_grad, losses, dev_labels.data().get());
+     
  }
