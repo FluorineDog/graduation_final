@@ -57,17 +57,21 @@ class MemoryManager {
         total_weight += size;
     }
     float* get_weight(int id) {
+        assert(weight.size() == total_weight);
         auto offset = weight_offsets[id];
         return weight.data().get() + offset;
     }
     float* get_weight_grad(int id) {
+        assert(weight_grad.size() == total_weight);
         auto offset = weight_offsets[id];
         return weight_grad.data().get() + offset;
     }
 
-    void finish_weight(int id) {
+    void finish_weight() {
         dog_resize_to(weight, {(int)total_weight}, true);
         dog_resize_to(weight_grad, {(int)total_weight}, false);
+        assert(weight.size() == total_weight);
+        assert(weight.size() == total_weight);
     }
     void free(int id) {}
     void terminate() {

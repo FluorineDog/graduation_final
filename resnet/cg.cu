@@ -29,6 +29,7 @@ void Engine::register_weight_maps() {
         mm.register_weight(id, size);
     });
     dfs.execute_at(dest_node);
+    mm.finish_weight();
 }
 
 void Engine::forward_pass(float* input) {

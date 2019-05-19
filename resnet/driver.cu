@@ -41,7 +41,7 @@ int main() {
     Engine eng;
     // define network structure
     int B = 10;
-    int features = 2;
+    int features = 7;
     int hidden = features;
     int classes = 2;
     dim_t input_dim = {B, features};
@@ -53,7 +53,7 @@ int main() {
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
+    // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
@@ -90,7 +90,7 @@ int main() {
         auto act = eng.get_ptr(eng.dest_node);
         auto act_grad = eng.get_ptr(~eng.dest_node);
 
-        ce.forward(losses, act, dev_labels.data().get());
+        // ce.forward(losses, act, dev_labels.data().get());
         dog_print("##", act, dim_t{B, classes});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
         // ce.backward(act_grad, losses, dev_labels.data().get());

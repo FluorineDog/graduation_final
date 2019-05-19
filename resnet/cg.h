@@ -36,6 +36,7 @@ class MetaVisitor : public Visitor {
     }
 
     size_t weight_size(NodeBase& node) {
+        node.accept(*this);
         return weight_sz;
     }
 
