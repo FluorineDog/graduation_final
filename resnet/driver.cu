@@ -7,7 +7,7 @@
 #include <thrust/device_vector.h>
 struct functor {
     __host__ __device__ bool operator()(float x) {
-        return x < 1;
+        return x < 0.6931471805599453;
     }
 };
 
@@ -40,7 +40,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 128;
+    int B = 1024;
     int features = 256;
     int hidden = features;
     int classes = 2;
@@ -71,7 +71,7 @@ int main() {
         for(auto x : Range(features)) {
             sum += input[id * features + x];
         }
-        int label = sum > 0 ? 1 : 0;
+        int label = sum >= 0 ? 1 : 0;
         labels.push_back(label);
     }
 
