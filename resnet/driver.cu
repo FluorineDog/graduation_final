@@ -54,7 +54,7 @@ int main() {
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
-    // x = eng.insert_node<FCNode>(x, B, hidden, classes);
+    x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
 
