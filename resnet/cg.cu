@@ -28,15 +28,29 @@ void Engine::register_weight_maps() {
         auto size = meta.weight_size(node);
         mm.register_weight(id, size);
     });
+    dfs.execute_at(src_node);
 }
-
 
 void Engine::forward_pass(float* input) {
     ForwardVisitor fwd(*this);
     fwd.set(input);
     ProcedureDFS dfs(backward_graph);
-    dfs.set_visitor(Transfer::finish, [&, this](int, int id){
+    dfs.set_visitor(Transfer::finish, [&, this](int, int id) {
         auto& node = *this->nodes[id];
-        node.accept(fwd); 
+        node.accept(fwd);
     });
+    dfs.execute_at(src_node);
+}
+
+void Engine::backward_pass(float* act_grad) {
+    BackwardVisitor bwd(*this);
+    auto dim = MetaVisitor().out_dim(*nodes[dest_node]);
+    auto top = mm.get(~dest_node);
+    cudaMemcpy(top, act_grad, get_volume(dim) * sizeof(float), cudaMemcpyDefault);
+    ProcedureDFS dfs(forward_graph);
+    dfs.set_visitor(Transfer::finish, [&, this](int, int id){
+        auto& node = *nodes[id];
+        node.accept(bwd);
+    });
+    dfs.execute_at(dest_node);
 }

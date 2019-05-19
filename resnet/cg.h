@@ -66,7 +66,7 @@ class ForwardVisitor : public Visitor {
         //
         assert(n.node_id == 0);
         auto dev_p = eng.get_mm().get(n.node_id);
-        cudaMemcpy(dev_p, input_, n.size, cudaMemcpyDefault);
+        cudaMemcpy(dev_p, input_, n.size * sizeof(T), cudaMemcpyDefault);
     }
 
     virtual void visit(AddNode& n) override {
@@ -97,6 +97,9 @@ class FakeVisitor : public Visitor {
 
 class BackwardVisitor : public Visitor {
   public:
+    BackwardVisitor(Engine& eng):eng(eng){
+        
+    }
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
         auto out = mm.get(n.out_id);
@@ -120,7 +123,12 @@ class BackwardVisitor : public Visitor {
         return;
     }
     virtual void visit(AddNode& n) override {
-        auto 
+        auto& mm = eng.get_mm();
+        auto a_g = mm.get(~n.a_id);
+        auto b_g = mm.get(~n.b_id);
+        auto out_grad = mm.get(~n.out_id);
+        thrust::transform(a_g, a_g + n.size, out_grad, a_g, thrust::plus<double>());
+        thrust::transform(b_g, b_g + n.size, out_grad, b_g, thrust::plus<double>());
     }
     Engine& eng;
 };

@@ -124,6 +124,7 @@ class Engine {
     }
 
     void forward_pass(float* input);
+    void backward_pass(float* logits_grad);
 
     MemoryManager& get_mm() {
         return mm;
