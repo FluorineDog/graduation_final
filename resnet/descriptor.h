@@ -43,6 +43,9 @@ class TensorDescriptor {
     void init(dim_t dims) {
         dims_ = dims;
         auto strides = get_strides(dims_);
+        if(dims_.size() < 4){
+            dims_.resize(4, 1);
+        }
         cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
     }
 

@@ -40,7 +40,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 19;
+    int B = 10;
     int features = 8;
     int hidden = features;
     int classes = 2;
