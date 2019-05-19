@@ -11,26 +11,26 @@ struct functor {
     }
 };
 
-void dog_print(std::string name, const float* ptr, const dim_t& dim) {
-    cout << name << endl;
-    auto sz = get_volume(dim);
+// void dog_print(std::string name, const float* ptr, const dim_t& dim) {
+//     cout << name << endl;
+//     auto sz = get_volume(dim);
 
-    cudaDeviceSynchronize();
-    host_vector<T> vec(sz);
-    cudaMemcpy(vec.data(), ptr, sz * sizeof(float), cudaMemcpyDefault);
-    auto tmp = dim;
-    std::reverse(tmp.begin(), tmp.end());
-    for(auto index : Range(sz)) {
-        int index_cpy = index;
-        for(auto x : tmp) {
-            if(index_cpy % x != 0) break;
-            index_cpy /= x;
-            cout << "--------" << endl;
-        }
-        cout << vec[index] << " ";
-    }
-    cout << endl << "##########" << endl;
-}
+//     cudaDeviceSynchronize();
+//     host_vector<T> vec(sz);
+//     cudaMemcpy(vec.data(), ptr, sz * sizeof(float), cudaMemcpyDefault);
+//     auto tmp = dim;
+//     std::reverse(tmp.begin(), tmp.end());
+//     for(auto index : Range(sz)) {
+//         int index_cpy = index;
+//         for(auto x : tmp) {
+//             if(index_cpy % x != 0) break;
+//             index_cpy /= x;
+//             cout << "--------" << endl;
+//         }
+//         cout << vec[index] << " ";
+//     }
+//     cout << endl << "##########" << endl;
+// }
 
 void dog_log(float* ptr, const dim_t& dim){
 
@@ -40,8 +40,8 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 1024;
-    int features = 256;
+    int B = 19;
+    int features = 8;
     int hidden = features;
     int classes = 2;
     dim_t input_dim = {B, features};
@@ -52,7 +52,7 @@ int main() {
     x = eng.insert_node<FCNode>(x, B, features, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
@@ -84,7 +84,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(100)) {
+    for(auto x : Range(1)) {
         eng.zero_grad();
         eng.forward_pass(input.data());
         auto act = eng.get_ptr(eng.dest_node);

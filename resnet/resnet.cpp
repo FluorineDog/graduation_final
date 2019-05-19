@@ -20,25 +20,25 @@ using dim_t = Dims;
 Global global;
 class A {};
 
-void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
-    cout << name << endl;
-    auto sz = get_volume(dim);
-    assert(vec_vec.size() == sz);
-    host_vector<T> vec = vec_vec;
-    cudaDeviceSynchronize();
-    auto tmp = dim;
-    std::reverse(tmp.begin(), tmp.end());
-    for(auto index : Range(sz)) {
-        int index_cpy = index;
-        for(auto x : tmp) {
-            if(index_cpy % x != 0) break;
-            index_cpy /= x;
-            cout << "--------" << endl;
-        }
-        cout << vec[index] << " ";
-    }
-    cout << endl << "##########" << endl;
-}
+// void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
+//     cout << name << endl;
+//     auto sz = get_volume(dim);
+//     assert(vec_vec.size() == sz);
+//     host_vector<T> vec = vec_vec;
+//     cudaDeviceSynchronize();
+//     auto tmp = dim;
+//     std::reverse(tmp.begin(), tmp.end());
+//     for(auto index : Range(sz)) {
+//         int index_cpy = index;
+//         for(auto x : tmp) {
+//             if(index_cpy % x != 0) break;
+//             index_cpy /= x;
+//             cout << "--------" << endl;
+//         }
+//         cout << vec[index] << " ";
+//     }
+//     cout << endl << "##########" << endl;
+// }
 
 
 
