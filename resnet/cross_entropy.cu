@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "global.h"
 #include "cross_entropy.h"
 #define PAR(total, threads) <<<((total) + threads - 1) / threads, threads>>>
 

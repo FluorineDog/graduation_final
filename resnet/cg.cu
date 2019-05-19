@@ -20,14 +20,23 @@ void Engine::prepare_gradient_maps() {
     }
 }
 
-
 void Engine::register_weight_maps() {
     MetaVisitor meta;
     ProcedureDFS dfs(backward_graph);
-    dfs.set_visitor(Transfer::finish, [&, this](int, int id){
+    dfs.set_visitor(Transfer::finish, [&, this](int, int id) {
         auto& node = *this->nodes[id];
         auto size = meta.weight_size(node);
         mm.register_weight(id, size);
     });
 }
 
+
+void Engine::forward_pass(float* input) {
+    ForwardVisitor fwd(*this);
+    fwd.set(input);
+    ProcedureDFS dfs(backward_graph);
+    dfs.set_visitor(Transfer::finish, [&, this](int, int id){
+        auto& node = *this->nodes[id];
+        node.accept(fwd); 
+    });
+}

@@ -98,19 +98,7 @@ void dog_print(std::string name, DeviceVector<T>& vec_vec, const dim_t& dim) {
 //     return 0;
 // }
 
-DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_size) {
-    vector<int> tmp;
-    thrust::host_vector<T> h_d(data);
 
-    for(auto bid : Range(batch)) {
-        double sum = 0;
-        for(auto eid : Range(entry_size)) {
-            sum += h_d[bid * entry_size + eid];
-        }
-        tmp.push_back(sum >= 0);
-    }
-    return tmp;
-}
 
 struct functor {
     __host__ __device__ bool operator()(float x) {

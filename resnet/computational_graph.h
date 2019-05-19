@@ -5,7 +5,7 @@
 #include "../doglib/graph/procedure.h"
 #include <random>
 // template <class T>
-void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
+inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
                    bool set_value = false) {
     auto sz = get_volume(dim);
     std::default_random_engine e(3);
@@ -17,6 +17,20 @@ void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
         }
     }
     vec_vec = host_vec;
+}
+
+inline DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_size) {
+    std::vector<int> tmp;
+    thrust::host_vector<T> h_d(data);
+
+    for(auto bid : Range(batch)) {
+        double sum = 0;
+        for(auto eid : Range(entry_size)) {
+            sum += h_d[bid * entry_size + eid];
+        }
+        tmp.push_back(sum >= 0);
+    }
+    return tmp;
 }
 
 using namespace doglib::graph;
@@ -37,7 +51,7 @@ class MemoryManager {
         assert(mapping.count(id));
         return mapping[id];
     }
-    void* register_weight(int id, int size) {
+    void register_weight(int id, int size) {
         weight_offsets[id] = total_weight;
         total_weight += size;
     }
@@ -104,10 +118,14 @@ class Engine {
         return id;
     }
 
-    void forward_pass() {}
+    void forward_pass(float* input);
 
     MemoryManager& get_mm() {
         return mm;
+    }
+
+    float* get_ptr(int id){
+        return mm.get(id);
     }
 
     int dest_node;
