@@ -18,7 +18,7 @@ class PoolingFunctor {
     void backward(float* in_grad, const float* in, const float* out_grad,
                   const float* out) {
         float alpha = 1.0;
-        float beta = 0.0;
+        float beta = 1.0;
         cudnnPoolingBackward(global.cudnn_handle(), dsc_pool, &alpha, dsc_out, out,
                              dsc_out, out_grad, dsc_in, in, &beta, dsc_in, in_grad);
     }

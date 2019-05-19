@@ -29,19 +29,13 @@ class FCFunctor {
     }
     void forward(float* out, const float* in, const float* weight) {
         auto bias = weight + in_size * out_size;
-        // add_biased(out, out_size, batch, 1.0, bias);
-        // float float_one = 1.0;
-        // float float_zero = 0.0;
-        // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N, batch, 1,
-        //                out_size, &float_one, bias, 1, ones, out_size, &float_zero, out,
-        //                out_size);
-        // batch*out <= batch*1 x 1*out
+
         sgemm(false, false, batch, 1, out_size, bias, ones, out);
         // batch*out <= batch*in x in*out
         // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N, batch, in_size,
         //                out_size, &float_one, in, in_size, weight, out_size, &float_one,
         //                out, out_size);
-        sgemm(false, false, batch, in_size, out_size, in, weight, out, false);
+        sgemm(false, false, batch, in_size, out_size, in, weight, out, true);
     }
 
     void backward(float* in_grad, float* weight_grad, const float* in,
@@ -62,7 +56,7 @@ class FCFunctor {
   private:
     void backwardFilter(float* weight_grad, const float* in, const float* out_grad) {
         auto bias_grad = weight_grad + in_size * out_size;
-        // float float_one = 1.0;
+        float float_one = 1.0;
         float float_zero = 0.0;
         // W: inxout <= batch*in x batch*out
         sgemm(true, false, in_size, batch, out_size, in, out_grad, weight_grad);
@@ -70,7 +64,7 @@ class FCFunctor {
         //                out_size, &float_one, in, in_size, out_grad, out_size, &float_zero,
         //                out_grad, out_size);
         // b: out <= batch*out * batch
-        cublasSgemv_v2(global.cublas_handle(), CUBLAS_OP_N, out_size, batch, &float_zero,
+        cublasSgemv_v2(global.cublas_handle(), CUBLAS_OP_N, out_size, batch, &float_one,
                        out_grad, out_size, ones, 1, &float_zero, bias_grad, 1);
     }
     void backwardData(float* in_grad_, const float* weight_, const float* out_grad_) {
@@ -81,7 +75,7 @@ class FCFunctor {
         // auto bias = weight + in_size * out_size;
         // float float_one = 1.0;
         // float float_zero = 0.0;
-        sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad);
+        sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad, true);
         // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_T, batch, out_size,
         //                in_size, &float_one, out_grad, out_size, weight, out_size,
         //                &float_zero, in_grad, in_size);

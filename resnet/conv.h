@@ -87,7 +87,7 @@ class ConvolutionFunctor {
     }
     void backwardData(float* in_grad, const float* out_grad, const float* filter) {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_1;
-        float alpha = 1, beta = 0;
+        float alpha = 1, beta = 1.0;
         cudnnConvolutionBackwardData(global.cudnn_handle(), &alpha, dsc_filter, filter,
                                      dsc_out, out_grad, dsc_conv, kAlgo,
                                      global.get_workspace(), global.get_workspace_size(),
@@ -104,7 +104,7 @@ class ConvolutionFunctor {
     }
     void backwardFilter(float* filter_grad, const float* out_grad, const float* in) {
         auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
-        float alpha = 1, beta = 0;
+        float alpha = 1, beta = 1.0;
         cudnnConvolutionBackwardFilter(global.cudnn_handle(), &alpha, dsc_in, in, dsc_out,
                                        out_grad, dsc_conv, kAlgo, global.get_workspace(),
                                        global.get_workspace_size(), &beta, dsc_filter,

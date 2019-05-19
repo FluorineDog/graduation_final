@@ -100,8 +100,27 @@ class BackwardVisitor : public Visitor {
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
         auto out = mm.get(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out_grad = mm.get(~n.out_id);
+        auto in_grad = mm.get(~n.in_id);
+        auto weight = mm.get_weight(n.out_id);
+        auto weight_grad = mm.get_weight_grad(n.out_id);
+        n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
     }
-    virtual void visit(ActivationNode& n) override {}
-    virtual void visit(PlaceHolderNode& n) override {}
-    virtual void visit(AddNode& n) override {}
+    virtual void visit(ActivationNode& n) override {
+        auto& mm = eng.get_mm();
+        auto out = mm.get(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out_grad = mm.get(~n.out_id);
+        auto in_grad = mm.get(~n.in_id);
+        n.functor.backward(in_grad, out_grad, in, out);
+    }
+
+    virtual void visit(PlaceHolderNode& n) override {
+        return;
+    }
+    virtual void visit(AddNode& n) override {
+        auto 
+    }
+    Engine& eng;
 };

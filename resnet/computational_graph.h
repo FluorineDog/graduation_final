@@ -59,6 +59,11 @@ class MemoryManager {
         auto offset = weight_offsets[id];
         return weight.data().get() + offset;
     }
+    float* get_weight_grad(int id) {
+        auto offset = weight_offsets[id];
+        return weight_grad.data().get() + offset;
+    }
+
     void finish_weight(int id) {
         dog_resize_to(weight, {(int)total_weight}, true);
         dog_resize_to(weight_grad, {(int)total_weight}, false);
