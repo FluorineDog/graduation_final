@@ -6,7 +6,7 @@
 #include <random>
 // template <class T>
 inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
-                   bool set_value = false) {
+                          bool set_value = false) {
     auto sz = get_volume(dim);
     std::default_random_engine e(3);
     vec_vec.resize(sz);
@@ -19,7 +19,8 @@ inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
     vec_vec = host_vec;
 }
 
-inline DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch, int entry_size) {
+inline DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch,
+                                    int entry_size) {
     std::vector<int> tmp;
     thrust::host_vector<T> h_d(data);
 
@@ -72,12 +73,16 @@ class MemoryManager {
     void terminate() {
         mapping.clear();
     }
-    void zero_grad(){
-        for(auto pr: mapping){
+    void zero_grad() {
+        for(auto pr : mapping) {
             auto& vec = pr.second;
             thrust::fill(vec.begin(), vec.end(), 0);
         }
         thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
+    }
+    void step() {
+        thrust::transform(weight.begin(), weight.end(), weight_grad.begin(),
+                          weight.begin(), thrust::plus<float>());
     }
 
   private:
@@ -131,15 +136,19 @@ class Engine {
 
     void forward_pass(float* input);
     void backward_pass(float* logits_grad);
-    void zero_grad(){
+    void zero_grad() {
         mm.zero_grad();
+    }
+
+    void step() {
+        mm.step();
     }
 
     MemoryManager& get_mm() {
         return mm;
     }
 
-    float* get_ptr(int id){
+    float* get_ptr(int id) {
         return mm.get(id);
     }
 

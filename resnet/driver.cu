@@ -3,13 +3,46 @@
 #include "components/cross_entropy.h"
 #include <random>
 
+#include <thrust/count.h>
+#include <thrust/device_vector.h>
+struct functor {
+    __host__ __device__ bool operator()(float x) {
+        return x < 1;
+    }
+};
+
+void dog_print(std::string name, const float* ptr, const dim_t& dim) {
+    cout << name << endl;
+    auto sz = get_volume(dim);
+
+    cudaDeviceSynchronize();
+    host_vector<T> vec(sz);
+    cudaMemcpy(vec.data(), ptr, sz * sizeof(float), cudaMemcpyDefault);
+    auto tmp = dim;
+    std::reverse(tmp.begin(), tmp.end());
+    for(auto index : Range(sz)) {
+        int index_cpy = index;
+        for(auto x : tmp) {
+            if(index_cpy % x != 0) break;
+            index_cpy /= x;
+            cout << "--------" << endl;
+        }
+        cout << vec[index] << " ";
+    }
+    cout << endl << "##########" << endl;
+}
+
+void dog_log(float* ptr, const dim_t& dim){
+
+}
+
 Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 128;
-    int features = 1000;
-    int hidden = 512;
+    int B = 7;
+    int features = 17;
+    int hidden = 9;
     int classes = 2;
     dim_t input_dim = {B, features};
 
@@ -27,32 +60,46 @@ int main() {
 
     host_vector<float> input;
     input.resize(B * 1000);
-    std::default_random_engine e;
+    std::default_random_engine e(201);
     for(auto& x : input) {
-        x = 1.0 * (float)(e() % 10001) / 10000;
+        x = (float)(e() % 10001) / 5000;
     }
 
     host_vector<int> labels;
-    for(auto id: Range(B)){
-        float sum;
-        for(auto x: Range(features)){
-            sum += input[id * features + x]; 
+    for(auto id : Range(B)) {
+        float sum = 0;
+        for(auto x : Range(features)) {
+            sum += input[id * features + x];
         }
-        int label = sum > 1000 ? 1:0;
+        int label = sum > features ? 1 : 0;
         labels.push_back(label);
     }
 
+    for(auto x : labels) {
+        cout << x << " ";
+    }
+    cout << endl;
 
     device_vector<int> dev_labels = labels;
     DeviceVector<T> losses(B);
-    CrossEntropy ce(B, classes); 
+    CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-
-    eng.zero_grad();
-    eng.forward_pass(input.data());
-    auto act = eng.get_ptr(eng.dest_node);
-    auto act_grad = eng.get_ptr(~eng.dest_node);
-    ce.forward(losses, act, dev_labels.data().get());
-    ce.backward(act_grad, losses, dev_labels.data().get());
-     
- }
+    for(auto x : Range(2)) {
+        eng.zero_grad();
+        eng.forward_pass(input.data());
+        auto act = eng.get_ptr(eng.dest_node);
+        auto act_grad = eng.get_ptr(~eng.dest_node);
+        ce.forward(losses, act, dev_labels.data().get());
+        auto loss = thrust::reduce(losses.begin(), losses.end());
+        
+        dog_print("##", act, dim_t{B, classes});
+        dog_print("SS", act, dim_t{B, classes});
+        // dog_print("hhd", act, {B});
+        
+        // ce.backward(act_grad, losses, dev_labels.data().get());
+        // eng.backward_pass(act_grad);
+        int correct = thrust::count_if(losses.begin(), losses.end(), functor());
+        eng.step();
+        cout << "^^" << loss / B << "%%" << correct << endl;
+    }
+}
