@@ -44,6 +44,7 @@ int main() {
     device_vector<int> dev_labels = labels;
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes); 
+    global.update_workspace_size(ce.workspace());
 
     eng.forward_pass(input.data());
     auto act = eng.get_ptr(eng.dest_node);

@@ -42,6 +42,7 @@ class MetaVisitor : public Visitor {
   private:
     dim_t map_dim;
     size_t weight_sz;
+    size_t workspace = 0;
 };
 
 class ForwardVisitor : public Visitor {
