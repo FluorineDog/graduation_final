@@ -17,7 +17,7 @@ class Visitor {
     virtual void visit(class PlaceHolderNode&) = 0;
     // virtual void visit(class VariableNode&) = 0;
     virtual void visit(class AddNode&) = 0;
-    // virtual void visit(class BatchNormNode& ) = 0;
+    virtual void visit(class BatchNormNode& ) = 0;
     ~Visitor() = default;
 };
 
@@ -52,6 +52,17 @@ struct ActivationNode : NodeBase {
     int in_id;
     int out_id;
     ActivationFunctor functor;
+    void accept(Visitor& v) override {
+        return v.visit(*this);
+    }
+};
+
+struct BatchNormNode : NodeBase {
+    BatchNormNode(int in_id, int out_id, dim_t dim)
+        : in_id(in_id), out_id(out_id), functor(dim) {}
+    int in_id;
+    int out_id;
+    BatchNorm functor;
     void accept(Visitor& v) override {
         return v.visit(*this);
     }
