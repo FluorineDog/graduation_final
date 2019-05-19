@@ -62,7 +62,7 @@ int main() {
     input.resize(B * 1000);
     std::default_random_engine e(201);
     for(auto& x : input) {
-        x = (float)(e() % 10001) / 5000;
+        x = (float)(e() % 10001) / 5000 - 1;
     }
 
     host_vector<int> labels;
@@ -71,7 +71,7 @@ int main() {
         for(auto x : Range(features)) {
             sum += input[id * features + x];
         }
-        int label = sum > features ? 1 : 0;
+        int label = sum > 0 ? 1 : 0;
         labels.push_back(label);
     }
 
@@ -93,7 +93,7 @@ int main() {
         ce.forward(losses, act, dev_labels.data().get());
         // dog_print("##", act, dim_t{B, classes});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
-        ce.backward(act_grad, 0.00001, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.001, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // // dog_print("hhd", act, {B});
         
