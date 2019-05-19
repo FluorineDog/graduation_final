@@ -1,3 +1,10 @@
+#pragma once
+
+#include "../helper/common.h"
+#include <random>
+#include <thrust/count.h>
+#include <thrust/device_vector.h>
+
 inline void dog_print(std::string name, const float* ptr, const dim_t& dim) {
     cout << name << endl;
     auto sz = get_volume(dim);
