@@ -13,7 +13,7 @@ class CrossEntropy {
 
     void forward(float *loss, const float *act, const int *labels);
 
-    void backward(float *act_grad, float rate, const float* loss_grad, const int *labels);
+    void backward(float *act_grad, float rate, const float* act, const float* loss_grad, const int *labels);
 
     size_t workspace() {
         return class_size * batch_size * sizeof(float) + 16;
