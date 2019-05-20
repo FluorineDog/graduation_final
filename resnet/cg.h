@@ -53,7 +53,7 @@ class MetaVisitor : public Visitor {
         node.accept(*this);
         return workspace;
     }
-
+    
   private:
     dim_t map_dim;
     size_t weight_sz;

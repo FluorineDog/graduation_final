@@ -39,7 +39,15 @@ using namespace doglib::graph;
 
 struct OP1{
     __host__ __device__ float operator()(float a, float b){
-        return 0.9 * a + b;
+        float x = 0.9 * a + b;
+        return x;
+    }
+};
+
+struct OP2 {
+    __host__ __device__ float operator()(float a, float b){
+        // return a - 0.01 * a * a * a + b;
+        return a + b;
     }
 };
 //  stupid version
@@ -95,7 +103,7 @@ class MemoryManager {
         thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
                           weight_acc.begin(), OP1());
         thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
-                          weight.begin(), thrust::plus<float>());
+                          weight.begin(), OP2());
     }
 
   private:
