@@ -111,7 +111,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 10;
+    int B = 10000;
     int features = 5;
     int hidden = 3;
     int classes = 2;
@@ -120,34 +120,39 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
     auto shortcut = x;
-    x = eng.insert_node<FCNode>(x, B, features, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, features, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
-
+    
+    // auto total = 60000;
     // host_vector<float> data_raw = get_data();
     // host_vector<int> labels_raw = get_labels();
 
-    host_vector<float> input;
-    host_vector<int> labels;
-    input.resize(B * 1000);
+    auto total = B;
+    host_vector<float> data_raw;
+    host_vector<int> labels_raw;
+    data_raw.resize(B * 1000);
     std::default_random_engine e(201);
-    for(auto& x : input) {
+    for(auto& x : data_raw) {
         x = (float)(e() % 10001) / 5000 - 1;
     }
     for(auto id : Range(B)) {
         float sum = 0;
         for(auto x : Range(features)) {
-            sum *= input[id * features + x];
+            sum += data_raw[id * features + x];
         }
         int label = sum >= 0 ? 1 : 0;
-        labels.push_back(label);
+        labels_raw.push_back(label);
     }
 
+    for(auto x: labels_raw){
+        cout << x; 
+    }  
     cout << endl;
 
     DeviceVector<T> losses(B);
@@ -155,7 +160,7 @@ int main() {
     global.update_workspace_size(ce.workspace());
     for(auto x : Range(10000)) {
         // x = 1;
-        auto offset_lb = x % 100 * B;
+        auto offset_lb = x % (total / B) * B;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
@@ -170,7 +175,7 @@ int main() {
         // dog_print("##", act, dim_t{B, classes});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
-        ce.backward(act_grad, 0.00001, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.01, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // // dog_print("hhd", act, {B});
 

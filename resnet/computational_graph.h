@@ -92,9 +92,9 @@ class MemoryManager {
         thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
     }
     void step() {
-        thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
-                          weight_acc.begin(), OP1());
-        thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
+        // thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
+        //                   weight_acc.begin(), OP1());
+        thrust::transform(weight.begin(), weight.end(), weight_grad.begin(),
                           weight.begin(), thrust::plus<float>());
     }
 
