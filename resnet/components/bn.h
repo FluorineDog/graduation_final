@@ -12,8 +12,8 @@ class BatchNorm {
     }
     void forward(float* out, const float* in, const float* weight) {
         float alpha = 1, beta = 0;
-        auto bnScale = (T*)weight;
-        auto bnBias = 1 * bn_size + (T*)weight;
+        auto bnScale = (const T*)weight;
+        auto bnBias = 1 * bn_size + (const T*)weight;
         auto bnRunningMean = (T*)extra;
         auto bnRunningVar = 1 * bn_size + (T*)extra;
         auto bnSavedMean = 2 * bn_size + (T*)extra;
@@ -27,19 +27,22 @@ class BatchNorm {
     size_t weight_size() {
         return 2 * bn_size;
     }
-    void backward(float* in_grad, float* weight_grad, const float* in, const float* out_grad,
-                  const float* weight) {
+    dim_t out_dim() {
+        return dsc_io.dims();
+    }
+    void backward(float* in_grad, float* weight_grad, const float* in,
+                  const float* out_grad, const float* weight) {
         float alpha = 1, betaOut = 1;
         // float betaIn = 0;
-        auto bnScale = (T*)weight;
+        auto bnScale = (const T*)weight;
         // auto bnBias = 1 * bn_size + (T*)weight;
         auto bnScale_grad = (T*)weight_grad;
         auto bnBias_grad = 1 * bn_size + (T*)weight_grad;
         auto bnSavedMean = 2 * bn_size + (T*)extra;
         auto bnSavedVar = 3 * bn_size + (T*)extra;
         cudnnBatchNormalizationBackward(
-            global.cudnn_handle(), kMode, &alpha, &betaOut, &alpha, &betaOut, dsc_io, in, dsc_io,
-            out_grad, dsc_io, in_grad, dsc_bn, bnScale, bnScale_grad, bnBias_grad,
+            global.cudnn_handle(), kMode, &alpha, &betaOut, &alpha, &betaOut, dsc_io, in,
+            dsc_io, out_grad, dsc_io, in_grad, dsc_bn, bnScale, bnScale_grad, bnBias_grad,
             CUDNN_BN_MIN_EPSILON, bnSavedMean, bnSavedVar);
     }
 
@@ -50,4 +53,3 @@ class BatchNorm {
     size_t fwd_counter;
     size_t bn_size;
 };
-

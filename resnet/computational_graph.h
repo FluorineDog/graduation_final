@@ -105,12 +105,14 @@ class Engine {
     }
 
     void prepare_feature_maps();
+    void prepare_workspace();
     void prepare_gradient_maps();    // (todo)
     void register_weight_maps();     //: better with hashtable
 
     void finish_off() {
         backward_graph = transpose(forward_graph);
         prepare_feature_maps();
+        prepare_workspace();
         prepare_gradient_maps();    // (todo)
         register_weight_maps();     //: better with hashtable
     }

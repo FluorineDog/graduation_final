@@ -7,27 +7,37 @@ class MetaVisitor : public Visitor {
     virtual void visit(FCNode& n) override {
         weight_sz = n.functor.size_parameters();
         map_dim = n.functor.out_dim();
+        workspace = 0;
     }
     virtual void visit(ActivationNode& n) override {
         weight_sz = 0;
         map_dim = n.functor.out_dim();
+        workspace = 0;
     }
     virtual void visit(PlaceHolderNode& n) override {
         weight_sz = 0;
         map_dim = n.dim;
+        workspace = 0;
     }
     virtual void visit(AddNode& n) override {
         weight_sz = 0;
         map_dim = n.dim;
+        workspace = 0;
+    }
+    virtual void visit(BatchNormNode& n) override {
+        weight_sz = n.functor.weight_size();
+        map_dim = n.functor.out_dim();
+        workspace = 0;
     }
     struct Meta {
         size_t weight_sz;
         dim_t map_dim;
+        size_t workspace;
     };
 
     Meta analyse(NodeBase& node) {
         node.accept(*this);
-        return Meta{weight_sz, map_dim};
+        return Meta{weight_sz, map_dim, workspace};
     }
 
     dim_t out_dim(NodeBase& node) {
@@ -38,6 +48,10 @@ class MetaVisitor : public Visitor {
     size_t weight_size(NodeBase& node) {
         node.accept(*this);
         return weight_sz;
+    }
+    size_t workspace_size(NodeBase& node) {
+        node.accept(*this);
+        return workspace;
     }
 
   private:
@@ -81,6 +95,7 @@ class ForwardVisitor : public Visitor {
     void set(float* input) {
         input_ = input;
     }
+    virtual void visit(BatchNormNode& n) override {}
 
   private:
     float* input_;
@@ -93,6 +108,7 @@ class FakeVisitor : public Visitor {
     virtual void visit(ActivationNode& n) override {}
     virtual void visit(PlaceHolderNode& n) override {}
     virtual void visit(AddNode& n) override {}
+    virtual void visit(BatchNormNode& n) override {}
 };
 
 class BackwardVisitor : public Visitor {
@@ -129,6 +145,10 @@ class BackwardVisitor : public Visitor {
                           thrust::plus<double>());
         thrust::transform(thrust::device, b_g, b_g + n.size, out_grad, b_g,
                           thrust::plus<double>());
+    }
+
+    virtual void visit(BatchNormNode& n) override {
+        // todo
     }
     Engine& eng;
 };

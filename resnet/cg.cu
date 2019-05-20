@@ -20,6 +20,17 @@ void Engine::prepare_gradient_maps() {
     }
 }
 
+void Engine::prepare_workspace() {
+    MetaVisitor meta;
+    for(auto& pr : nodes) {
+        auto id = std::get<0>(pr);
+        auto& node = std::get<1>(pr);
+        auto size = meta.analyse(*node).workspace;
+        global.update_workspace_size(size);
+    }
+}
+
+
 void Engine::register_weight_maps() {
     MetaVisitor meta;
     ProcedureDFS dfs(backward_graph);
