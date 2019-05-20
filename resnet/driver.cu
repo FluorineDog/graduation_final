@@ -111,11 +111,11 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 100;
-    int features = 28 * 28;
+    int B = 1;
+    int features = 4;
     // int hidden = 28 * 28;
-    int hidden = 1200;
-    int classes = 10;
+    int hidden = 4;
+    int classes = 2;
     dim_t input_dim = {B, features};
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
@@ -163,7 +163,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(10000)) {
+    for(auto x : Range(2)) {
         auto offset_lb = x % (total / B) * B;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
@@ -175,15 +175,16 @@ int main() {
         auto act = eng.get_ptr(eng.dest_node);
         auto act_grad = eng.get_ptr(~eng.dest_node);
         device_vector<int> dev_labels(labels_beg, labels_end);
+        dog_print("##", act, dim_t{B, classes});
         ce.forward(losses, act, dev_labels.data().get());
         // eng.get_mm().l2_forward(losses, B, 0.1);
-        // dog_print("##", act, dim_t{B, classes});
+        dog_print("??", losses, dim_t{B});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
         // eng.get_mm().l2_backward(losses, B, 0.1);
         ce.backward(act_grad, 0.1, act, losses, dev_labels.data().get());
-        // dog_print("SS", act_grad, dim_t{B, classes});
-        // // dog_print("hhd", act, {B});
+        dog_print("SS", act_grad, dim_t{B, classes});
+        dog_print("hhd", act, {B});
 
         eng.backward_pass(act_grad);
         // auto correct = thrust::count_if(losses.begin(), losses.end(), functor());

@@ -3,27 +3,27 @@
 #include "cross_entropy.h"
 #define PAR(total, threads) <<<((total) + threads - 1) / threads, threads>>>
 
-__global__ void nll_loss(float *loss, const float *logits_grad, const int *labels, int C,
-                         int N) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
-    if(index < N) {
-        int class_id = labels[index];
-        loss[index] = -logits_grad[index * C + class_id];
-    }
-}
+// __global__ void nll_loss(float *loss, const float *logits_grad, const int *labels, int C,
+//                          int N) {
+//     int index = threadIdx.x + blockIdx.x * blockDim.x;
+//     if(index < N) {
+//         int class_id = labels[index];
+//         loss[index] = -logits_grad[index * C + class_id];
+//     }
+// }
 
-__global__ void nll_loss_backward(float *logits_grad, float rate, const float *loss,
-                                  const int *labels, int C, int N) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
-    if(index < N * C) {
-        logits_grad[index] = 0.0;
-    }
-    if(index < N) {
-        auto loss_grad = -rate * loss[index] / N;
-        int class_id = labels[index];
-        logits_grad[index * C + class_id] = -loss_grad;
-    }
-}
+// __global__ void nll_loss_backward(float *logits_grad, float rate, const float *loss,
+//                                   const int *labels, int C, int N) {
+//     int index = threadIdx.x + blockIdx.x * blockDim.x;
+//     if(index < N * C) {
+//         logits_grad[index] = 0.0;
+//     }
+//     if(index < N) {
+//         auto loss_grad = -rate * loss[index] / N;
+//         int class_id = labels[index];
+//         logits_grad[index * C + class_id] = -loss_grad;
+//     }
+// }
 
 #define CUDA_1D_KERNEL_LOOP(i, n)                                  \
     for(size_t i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); \
@@ -43,7 +43,7 @@ __global__ void LabelCrossEntropyGradientKernel(const int N, const int D, float 
                                                 float *dXdata) {
     CUDA_1D_KERNEL_LOOP(i, N) {
         int idx = i * D + labeldata[i];
-        dXdata[idx] = -dYdata[i] / fmaxf(Xdata[idx], log_threshold) * -rate;
+        dXdata[idx] = -dYdata[i] / fmaxf(Xdata[idx], log_threshold) * -rate / N;
     }
 }
 
