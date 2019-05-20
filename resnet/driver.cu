@@ -4,6 +4,7 @@
 #include <random>
 #include <arpa/inet.h>
 #include <thrust/count.h>
+#include <thrust/reduce.h>
 #include <fstream>
 #include <thrust/device_vector.h>
 struct functor {
@@ -36,7 +37,7 @@ struct functor {
 void dog_log(float* ptr, const dim_t& dim) {}
 using std::vector;
 const char* data_file = "/home/guilin/workspace/data/mnist/images-idx3-ubyte";
-const char* labels_file = "/home/guilin/workspace/data/mnist/labels-idx3-ubyte";
+const char* labels_file = "/home/guilin/workspace/data/mnist/labels-idx1-ubyte";
 
 host_vector<float> get_data() {
     host_vector<float> data;
@@ -54,7 +55,7 @@ host_vector<float> get_data() {
     assert(number == 60000);
     assert(h == 28);
     assert(w == 28);
-    number = 600;
+    number = 60000;
     auto sz = number * w * h;
     data.resize(sz);
     vector<uint8_t> buffer(sz);
@@ -70,14 +71,14 @@ host_vector<float> get_data() {
 host_vector<int> get_labels() {
     host_vector<int> data;
     std::ifstream fin(labels_file, std::ios::binary);
-    int magic, number;
+    uint32_t magic, number;
     fin.read((char*)&magic, 4);
     fin.read((char*)&number, 4);
     magic = htonl(magic);
     number = htonl(number);
     assert(magic == 0x00000801);
     assert(number == 60000);
-    number = 600;
+    number = 60000;
     auto sz = number;
     data.resize(sz);
     vector<uint8_t> buffer(sz);
@@ -90,73 +91,100 @@ host_vector<int> get_labels() {
     return data;
 }
 
+float get_acc(float* dev_logits, int* labels, int N, int feature) {
+    vector<float> buffer(N * feature);
+    cudaMemcpy(buffer.data(), dev_logits, N * feature * sizeof(float), cudaMemcpyDefault);
+    int count = 0;
+    for(int b : Range(N)) {
+        auto loc = std::max_element(buffer.begin() + b * feature,
+                                    buffer.begin() + (b + 1) * feature) -
+                   buffer.begin() - b * feature;
+        //
+        assert(0 <= loc && loc < feature);
+        assert(0 <= loc && loc < feature);
+        count += (loc == labels[b]) ? 1 : 0;
+    }
+    return count * 1.0 / N;
+}
+
 Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 600;
-    int features = 28 * 28;
-    int hidden = features;
+    int B = 10;
+    int features = 5;
+    int hidden = 3;
     int classes = 2;
     dim_t input_dim = {B, features};
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
     auto shortcut = x;
-    // x = eng.insert_node<FCNode>(x, B, features, hidden);
-    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    x = eng.insert_node<FCNode>(x, B, features, hidden);
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
 
-    host_vector<float> input = get_data();
-    host_vector<int> labels = get_labels();
-    // host_vector<float> input;
-    // host_vector<int> labels;
+    // host_vector<float> data_raw = get_data();
+    // host_vector<int> labels_raw = get_labels();
 
-    // input.resize(B * 1000);
-    // std::default_random_engine e(201);
-    // for(auto& x : input) {
-    //     x = (float)(e() % 10001) / 5000 - 1;
-    // }
-
-    // for(auto id : Range(B)) {
-    //     float sum = 0;
-    //     for(auto x : Range(features)) {
-    //         sum *= input[id * features + x];
-    //     }
-    //     int label = sum >= 0 ? 1 : 0;
-    //     labels.push_back(label);
-    // }
-
-    for(auto x : labels) {
-        cout << x << " ";
+    host_vector<float> input;
+    host_vector<int> labels;
+    input.resize(B * 1000);
+    std::default_random_engine e(201);
+    for(auto& x : input) {
+        x = (float)(e() % 10001) / 5000 - 1;
     }
+    for(auto id : Range(B)) {
+        float sum = 0;
+        for(auto x : Range(features)) {
+            sum *= input[id * features + x];
+        }
+        int label = sum >= 0 ? 1 : 0;
+        labels.push_back(label);
+    }
+
     cout << endl;
 
-    device_vector<int> dev_labels = labels;
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(100)) {
+    for(auto x : Range(10000)) {
+        // x = 1;
+        auto offset_lb = x % 100 * B;
+        auto offset_dt = offset_lb * features;
+        auto data_beg = data_raw.data() + offset_dt;
+        auto data_end = data_raw.data() + offset_dt + B * features;
+        auto labels_beg = labels_raw.data() + offset_lb;
+        auto labels_end = labels_raw.data() + offset_lb + B;
         eng.zero_grad();
-        eng.forward_pass(input.data());
+        eng.forward_pass(data_beg);
         auto act = eng.get_ptr(eng.dest_node);
         auto act_grad = eng.get_ptr(~eng.dest_node);
-
+        device_vector<int> dev_labels(labels_beg, labels_end);
         ce.forward(losses, act, dev_labels.data().get());
         // dog_print("##", act, dim_t{B, classes});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
-        ce.backward(act_grad, 0.005, losses, dev_labels.data().get());
+
+        ce.backward(act_grad, 0.00001, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // // dog_print("hhd", act, {B});
 
         eng.backward_pass(act_grad);
-        int correct = thrust::count_if(losses.begin(), losses.end(), functor());
-        eng.step();
-        cout << loss / B << " " << correct << endl;
+        // auto correct = thrust::count_if(losses.begin(), losses.end(), functor());
+        auto correct = get_acc(act, labels_beg, B, classes);
+        if(loss != loss) {
+            break;
+        }
+        if(x % 100) {
+            eng.step();
+            cout << loss / B << " " << correct << endl;
+        } else {
+            cout << "test: " << loss / B << " " << correct << endl;
+        }
     }
 }

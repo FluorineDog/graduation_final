@@ -13,7 +13,7 @@ inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
     thrust::host_vector<float> host_vec(sz, 0);
     if(set_value) {
         for(auto id : Range(sz)) {
-            host_vec[id] = (e() % 2001 / 1000.0 - 1) * 0.1;
+            host_vec[id] = (e() % 2001 / 1000.0 - 1) * 0.02;
         }
     }
     vec_vec = host_vec;
@@ -36,6 +36,12 @@ inline DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch,
 
 using namespace doglib::graph;
 
+
+struct OP1{
+    __host__ __device__ float operator()(float a, float b){
+        return 0.9 * a + b;
+    }
+};
 //  stupid version
 //  definition:
 //    accept correct
@@ -70,6 +76,7 @@ class MemoryManager {
     void finish_weight() {
         dog_resize_to(weight, {(int)total_weight}, true);
         dog_resize_to(weight_grad, {(int)total_weight}, false);
+        weight_acc.resize(total_weight, 0);
         assert(weight.size() == total_weight);
         assert(weight.size() == total_weight);
     }
@@ -85,7 +92,9 @@ class MemoryManager {
         thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
     }
     void step() {
-        thrust::transform(weight.begin(), weight.end(), weight_grad.begin(),
+        thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
+                          weight_acc.begin(), OP1());
+        thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
                           weight.begin(), thrust::plus<float>());
     }
 
@@ -95,6 +104,7 @@ class MemoryManager {
     size_t total_weight = 0;
     device_vector<float> weight;
     device_vector<float> weight_grad;
+    device_vector<float> weight_acc;
 };
 
 // graph executor, in one place
