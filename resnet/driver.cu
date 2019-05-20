@@ -163,7 +163,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(3)) {
+    for(auto x : Range(1000)) {
         auto offset_lb = x % (total / B) * B;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
@@ -175,7 +175,7 @@ int main() {
         auto act = eng.get_ptr(eng.dest_node);
         auto act_grad = eng.get_ptr(~eng.dest_node);
         device_vector<int> dev_labels(labels_beg, labels_end);
-        dog_print("##", act, dim_t{B, classes});
+        // dog_print("##", act, dim_t{B, classes});
         ce.forward(losses, act, dev_labels.data().get());
         // eng.get_mm().l2_forward(losses, B, 0.1);
         // dog_print("??", losses, dim_t{B});
