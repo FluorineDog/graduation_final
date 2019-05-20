@@ -55,12 +55,13 @@ host_vector<float> get_data() {
     for(auto id : Range(number)) {
         uint8_t x;
         fin >> x;
-        data[id] = x / 128.0 - 0.5;
+        assert(0 <= x && x < 255);
+        data[id] = x / 128.0;
     }
     return data;
 }
 
-host_vector<float> get_labels() {
+host_vector<int> get_labels() {
     host_vector<float> data;
     std::ifstream fin(labels_file);
     int magic, number;
@@ -73,7 +74,8 @@ host_vector<float> get_labels() {
     for(auto id : Range(number)) {
         uint8_t x;
         fin >> x;
-        data[id] = x;
+        assert(0 <= x && x < 10);
+        data[id] = x / 5;
     }
     return data;
 }
@@ -85,48 +87,51 @@ int main() {
     int B = 600;
     int features = 28 * 28;
     int hidden = features;
-    int classes = 10;
+    int classes = 2;
     dim_t input_dim = {B, features};
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
     auto shortcut = x;
-    x = eng.insert_node<FCNode>(x, B, features, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, features, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
+    // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
 
-    host_vector<float> input = get_data();
-    // input.resize(B * 1000);
-    // std::default_random_engine e(201);
-    // for(auto& x : input) {
-    //     x = (float)(e() % 10001) / 5000 - 1;
-    // }
+    // host_vector<float> input = get_data();
+    // host_vector<int> labels = get_labels();
+    host_vector<float> input;
+    host_vector<int> labels;
 
-    host_vector<int> labels = get_labels();
-    // for(auto id : Range(B)) {
-    //     float sum = 0;
-    //     for(auto x : Range(features)) {
-    //         sum *= input[id * features + x];
-    //     }
-    //     int label = sum >= 0 ? 1 : 0;
-    //     labels.push_back(label);
-    // }
+    input.resize(B * 1000);
+    std::default_random_engine e(201);
+    for(auto& x : input) {
+        x = (float)(e() % 10001) / 5000 - 1;
+    }
 
-    // for(auto x : labels) {
-    //     cout << x << " ";
-    // }
+    for(auto id : Range(B)) {
+        float sum = 0;
+        for(auto x : Range(features)) {
+            sum *= input[id * features + x];
+        }
+        int label = sum >= 0 ? 1 : 0;
+        labels.push_back(label);
+    }
+
+    for(auto x : labels) {
+        cout << x << " ";
+    }
     cout << endl;
 
     device_vector<int> dev_labels = labels;
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(10000)) {
+    for(auto x : Range(100)) {
         eng.zero_grad();
         eng.forward_pass(input.data());
         auto act = eng.get_ptr(eng.dest_node);
@@ -135,7 +140,7 @@ int main() {
         ce.forward(losses, act, dev_labels.data().get());
         // dog_print("##", act, dim_t{B, classes});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
-        ce.backward(act_grad, 0.5, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.005, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // // dog_print("hhd", act, {B});
 
