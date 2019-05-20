@@ -122,10 +122,6 @@ class BackwardVisitor : public Visitor {
         auto in_grad = mm.get(~n.in_id);
         auto weight = mm.get_weight(n.out_id);
         auto weight_grad = mm.get_weight_grad(n.out_id);
-        if(n.out_id == 2){
-            weight_grad = nullptr;
-            in_grad = nullptr;
-        }
         n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
     }
     virtual void visit(ActivationNode& n) override {
