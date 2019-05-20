@@ -40,7 +40,9 @@ class FCFunctor {
 
     void backward(float* in_grad, float* weight_grad, const float* in,
                   const float* out_grad, const float* weight) {
-        backwardFilter(weight_grad, in, out_grad);
+        if(weight_grad){
+            backwardFilter(weight_grad, in, out_grad);
+        }
         if(in_grad) {
             backwardData(in_grad, weight, out_grad);
         }

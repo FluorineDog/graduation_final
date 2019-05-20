@@ -36,16 +36,17 @@ inline DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch,
 
 using namespace doglib::graph;
 
-
-struct OP1{
-    __host__ __device__ float operator()(float a, float b){
+struct OP1 {
+    __host__ __device__ float operator()(float a, float b) {
         float x = 0.9 * a + b;
+        if(x > 1) x = 1;
+        if(x < -1) x = -1;
         return x;
     }
 };
 
 struct OP2 {
-    __host__ __device__ float operator()(float a, float b){
+    __host__ __device__ float operator()(float a, float b) {
         // return a - 0.01 * a * a * a + b;
         return a + b;
     }
@@ -99,6 +100,7 @@ class MemoryManager {
         }
         thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
     }
+
     void step() {
         thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
                           weight_acc.begin(), OP1());
