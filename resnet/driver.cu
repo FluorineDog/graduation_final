@@ -40,42 +40,52 @@ const char* labels_file = "/home/guilin/workspace/data/mnist/labels-idx3-ubyte";
 
 host_vector<float> get_data() {
     host_vector<float> data;
-    std::ifstream fin(data_file);
-    int magic, number, w, h;
-    fin >> magic >> number >> w >> h;
+    std::ifstream fin(data_file, std::ios::binary);
+    uint32_t magic, number, w, h;
+    fin.read((char*)&magic, 4);
+    fin.read((char*)&number, 4);
+    fin.read((char*)&w, 4);
+    fin.read((char*)&h, 4);
+    magic = htonl(magic);
     number = htonl(number);
     h = htonl(h);
     w = htonl(w);
-    assert(htonl(magic) == 0x00000801);
+    assert(magic == 0x00000803);
     assert(number == 60000);
     assert(h == 28);
     assert(w == 28);
     number = 600;
-    data.resize(number);
-    for(auto id : Range(number)) {
-        uint8_t x;
-        fin >> x;
-        assert(0 <= x && x < 255);
-        data[id] = x / 128.0;
+    auto sz = number * w * h;
+    data.resize(sz);
+    vector<uint8_t> buffer(sz);
+    fin.read((char*)buffer.data(), sz);
+    for(auto id : Range(sz)) {
+        uint8_t x = buffer[id];
+        assert(0 <= x && x < 256);
+        data[id] = x / 255.0;
     }
     return data;
 }
 
 host_vector<int> get_labels() {
-    host_vector<float> data;
-    std::ifstream fin(labels_file);
+    host_vector<int> data;
+    std::ifstream fin(labels_file, std::ios::binary);
     int magic, number;
-    fin >> magic >> number;
+    fin.read((char*)&magic, 4);
+    fin.read((char*)&number, 4);
+    magic = htonl(magic);
     number = htonl(number);
-    assert(htonl(magic) == 0x00000803);
+    assert(magic == 0x00000801);
     assert(number == 60000);
     number = 600;
-    data.resize(number);
-    for(auto id : Range(number)) {
-        uint8_t x;
-        fin >> x;
+    auto sz = number;
+    data.resize(sz);
+    vector<uint8_t> buffer(sz);
+    fin.read((char*)buffer.data(), sz);
+    for(auto id : Range(sz)) {
+        uint8_t x = buffer[id];
         assert(0 <= x && x < 10);
-        data[id] = x / 5;
+        data[id] = x;
     }
     return data;
 }
@@ -102,25 +112,25 @@ int main() {
     eng.dest_node = x;
     eng.finish_off();
 
-    // host_vector<float> input = get_data();
-    // host_vector<int> labels = get_labels();
-    host_vector<float> input;
-    host_vector<int> labels;
+    host_vector<float> input = get_data();
+    host_vector<int> labels = get_labels();
+    // host_vector<float> input;
+    // host_vector<int> labels;
 
-    input.resize(B * 1000);
-    std::default_random_engine e(201);
-    for(auto& x : input) {
-        x = (float)(e() % 10001) / 5000 - 1;
-    }
+    // input.resize(B * 1000);
+    // std::default_random_engine e(201);
+    // for(auto& x : input) {
+    //     x = (float)(e() % 10001) / 5000 - 1;
+    // }
 
-    for(auto id : Range(B)) {
-        float sum = 0;
-        for(auto x : Range(features)) {
-            sum *= input[id * features + x];
-        }
-        int label = sum >= 0 ? 1 : 0;
-        labels.push_back(label);
-    }
+    // for(auto id : Range(B)) {
+    //     float sum = 0;
+    //     for(auto x : Range(features)) {
+    //         sum *= input[id * features + x];
+    //     }
+    //     int label = sum >= 0 ? 1 : 0;
+    //     labels.push_back(label);
+    // }
 
     for(auto x : labels) {
         cout << x << " ";
