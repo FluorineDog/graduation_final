@@ -40,8 +40,6 @@ using namespace doglib::graph;
 struct OP1 {
     __host__ __device__ float operator()(float a, float b) {
         float x = 0.9 * a + b;
-        if(x > 1) x = 1;
-        if(x < -1) x = -1;
         return x;
     }
 };

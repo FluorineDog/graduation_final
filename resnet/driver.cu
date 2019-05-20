@@ -111,9 +111,9 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 100;
+    int B = 1000;
     int features = 28*28;
-    int hidden = 1000;
+    int hidden = 28 *28;
     int classes = 10;
     dim_t input_dim = {B, features};
 
@@ -127,7 +127,7 @@ int main() {
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
+    // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
 
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
@@ -162,8 +162,9 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(1000)) {
+    for(auto x : Range(10000)) {
         auto offset_lb = x % (total / B) * B;
+        // offset_lb = 0;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
@@ -181,7 +182,7 @@ int main() {
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
         // eng.get_mm().l2_backward(losses, B, 0.1);
-        ce.backward(act_grad, 0.1, act, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.01 / sqrt(x + 1), act, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // dog_print("hhd", act, {B});
 
@@ -191,7 +192,7 @@ int main() {
         if(loss != loss) {
             break;
         }
-        if(x % 100) {
+        if(x % 10 != 9) {
             eng.step();
             cout << loss / B << " " << correct << endl;
         } else {
