@@ -162,7 +162,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(10)) {
+    for(auto x : Range(100)) {
         auto offset_lb = x % (total / B) * B;
         offset_lb = 0;
         auto offset_dt = offset_lb * features;
