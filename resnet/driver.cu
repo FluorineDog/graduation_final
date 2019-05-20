@@ -112,19 +112,21 @@ int main() {
     Engine eng;
     // define network structure
     int B = 10000;
-    int features = 5;
-    int hidden = 3;
-    int classes = 2;
+    int features = 28 * 28;
+    int hidden = 28 * 28;
+    int classes = 5;
     dim_t input_dim = {B, features};
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
-    auto shortcut = x;
-    // x = eng.insert_node<FCNode>(x, B, features, hidden);
-    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+
+    // auto shortcut = x;
+    x = eng.insert_node<FCNode>(x, B, features, hidden);
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
+
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
@@ -159,7 +161,6 @@ int main() {
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
     for(auto x : Range(10000)) {
-        // x = 1;
         auto offset_lb = x % (total / B) * B;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
