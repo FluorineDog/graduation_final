@@ -48,29 +48,25 @@ __global__ void LabelCrossEntropyGradientKernel(const int N, const int D, float 
 }
 
 void CrossEntropy::forward(float *loss, const float *act, const int *labels) {
-    // auto kAlgo = CUDNN_SOFTMAX_LOG;
-    // auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
-    // float one = 1.0, zero = 0.0;
-    // auto logits = static_cast<float *>(global.get_workspace()) + 1;
-    // cudnnSoftmaxForward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io, act, &zero,
-    //                     dsc_io, logits);
-    // nll_loss PAR(batch_size, 128)(loss, logits, labels, class_size, batch_size);
-    // nll_loss
-    LabelCrossEntropyKernel PAR(batch_size, 128)(batch_size, class_size, act, labels, 1e-20, loss);
+    auto kAlgo = CUDNN_SOFTMAX_ACCURATE;
+    auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
+    float one = 1.0, zero = 0.0;
+    auto logits = static_cast<float *>(global.get_workspace());
+    cudnnSoftmaxForward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io, act, &zero,
+                        dsc_io, logits);
+    LabelCrossEntropyKernel PAR(batch_size, 128)(batch_size, class_size, logits, labels, 1e-20, loss);
 }
 
 void CrossEntropy::backward(float *act_grad, float rate, const float* act, const float *loss_grad,
                             const int *labels) {
-    // auto kAlgo = CUDNN_SOFTMAX_LOG;
-    // auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
-    // float one = 1.0, zero = 0.0;
-    // auto logits = static_cast<float *>(global.get_workspace());
-    // // nll_loss
+    auto kAlgo = CUDNN_SOFTMAX_ACCURATE;
+    auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
+    float one = 1.0, zero = 0.0;
+    auto logits = static_cast<float *>(global.get_workspace());
+    auto logits_grad = static_cast<float *>(global.get_workspace()) + batch_size * class_size;
 
-    // nll_loss_backward PAR(class_size * batch_size, 128)(logits, rate, loss_grad, labels,
-    //                                                     class_size, batch_size);
-    // auto st = cudnnSoftmaxBackward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io,
-    //                                global.get_workspace(), dsc_io, logits, &zero, dsc_io,
-    //                                act_grad);
-    LabelCrossEntropyGradientKernel PAR(batch_size, 128)(batch_size, class_size, rate, act, labels, loss_grad, 1e-20, act_grad); 
+    LabelCrossEntropyGradientKernel PAR(batch_size, 128)(batch_size, class_size, rate, logits, labels, loss_grad, 1e-20, logits_grad); 
+    auto st = cudnnSoftmaxBackward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io,
+                                   logits, dsc_io, logits_grad, &zero, dsc_io,
+                                   act_grad);
 }
