@@ -40,8 +40,8 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 10000;
-    int features = 8;
+    int B = 100000;
+    int features = 2;
     int hidden = features;
     int classes = 2;
     dim_t input_dim = {B, features};
@@ -52,8 +52,8 @@ int main() {
     x = eng.insert_node<FCNode>(x, B, features, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
@@ -69,22 +69,22 @@ int main() {
     for(auto id : Range(B)) {
         float sum = 0;
         for(auto x : Range(features)) {
-            sum += input[id * features + x];
+            sum *= input[id * features + x];
         }
         int label = sum >= 0 ? 1 : 0;
         labels.push_back(label);
     }
 
-    for(auto x : labels) {
-        cout << x << " ";
-    }
+    // for(auto x : labels) {
+    //     cout << x << " ";
+    // }
     cout << endl;
 
     device_vector<int> dev_labels = labels;
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(100)) {
+    for(auto x : Range(10000)) {
         eng.zero_grad();
         eng.forward_pass(input.data());
         auto act = eng.get_ptr(eng.dest_node);
@@ -93,13 +93,13 @@ int main() {
         ce.forward(losses, act, dev_labels.data().get());
         // dog_print("##", act, dim_t{B, classes});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
-        ce.backward(act_grad, 0.0001, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.5, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // // dog_print("hhd", act, {B});
         
         eng.backward_pass(act_grad);
         int correct = thrust::count_if(losses.begin(), losses.end(), functor());
         eng.step();
-        cout << "^^" << loss / B << "%%" << correct << endl;
+        cout << loss / B << " " << correct << endl;
     }
 }
