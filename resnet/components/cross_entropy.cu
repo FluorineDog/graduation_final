@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "../helper/global.h"
 #include "cross_entropy.h"
+#include "functor.h"
 #define PAR(total, threads) <<<((total) + threads - 1) / threads, threads>>>
 
 // __global__ void nll_loss(float *loss, const float *logits_grad, const int *labels, int C,
@@ -66,6 +67,7 @@ void CrossEntropy::backward(float *act_grad, float rate, const float* act, const
     auto logits_grad = static_cast<float *>(global.get_workspace()) + batch_size * class_size;
 
     LabelCrossEntropyGradientKernel PAR(batch_size, 128)(batch_size, class_size, rate, logits, labels, loss_grad, 1e-20, logits_grad); 
+    dog_print("fuck", logits, {batch_size, class_size});
     auto st = cudnnSoftmaxBackward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io,
                                    logits, dsc_io, logits_grad, &zero, dsc_io,
                                    act_grad);

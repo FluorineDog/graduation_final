@@ -62,9 +62,6 @@ class FCFunctor {
         float float_zero = 0.0;
         // W: inxout <= batch*in x batch*out
         sgemm(true, false, in_size, batch, out_size, in, out_grad, weight_grad);
-        // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N, in_size, batch,
-        //                out_size, &float_one, in, in_size, out_grad, out_size, &float_zero,
-        //                out_grad, out_size);
         // b: out <= batch*out * batch
         cublasSgemv_v2(global.cublas_handle(), CUBLAS_OP_N, out_size, batch, &float_one,
                        out_grad, out_size, ones, 1, &float_zero, bias_grad, 1);
@@ -78,9 +75,6 @@ class FCFunctor {
         // float float_one = 1.0;
         // float float_zero = 0.0;
         sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad, true);
-        // cublasSgemm_v2(global.cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_T, batch, out_size,
-        //                in_size, &float_one, out_grad, out_size, weight, out_size,
-        //                &float_zero, in_grad, in_size);
     }
 
   private:

@@ -86,7 +86,7 @@ host_vector<int> get_labels() {
     for(auto id : Range(sz)) {
         uint8_t x = buffer[id];
         assert(0 <= x && x < 10);
-        data[id] = x;
+        data[id] = 9 - x;
     }
     return data;
 }
@@ -111,7 +111,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 1000;
+    int B = 100;
     int features = 28*28;
     int hidden = 28 *28;
     int classes = 10;
@@ -122,11 +122,11 @@ int main() {
 
     auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, features, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
 
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
@@ -154,17 +154,17 @@ int main() {
     //     labels_raw.push_back(label);
     // }
 
-    // for(auto x: labels_raw){
-    //     cout << x; 
-    // }  
-    // cout << endl;
+    for(auto x: labels_raw){
+        cout << x; 
+    }  
+    cout << endl;
 
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(10000)) {
+    for(auto x : Range(10)) {
         auto offset_lb = x % (total / B) * B;
-        // offset_lb = 0;
+        offset_lb = 0;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
@@ -182,7 +182,7 @@ int main() {
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
         // eng.get_mm().l2_backward(losses, B, 0.1);
-        ce.backward(act_grad, 0.01 / sqrt(x + 1), act, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.1 / sqrt(x + 1), act, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // dog_print("hhd", act, {B});
 
