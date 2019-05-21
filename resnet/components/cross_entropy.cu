@@ -37,14 +37,14 @@ __global__ void LabelCrossEntropyKernel(const int N, const int D, const float *X
         Ydata[i] = -logf(fmaxf(Xdata[i * D + labeldata[i]], log_threshold));
     }
 }
-__global__ void LabelCrossEntropyGradientKernel(const int N, const int D, float rate,
+__global__ void LabelCrossEntropyGradientKernel(const int N, const int D,
                                                 const float *Xdata, const int *labeldata,
                                                 const float *dYdata,
                                                 const float log_threshold,
                                                 float *dXdata) {
     CUDA_1D_KERNEL_LOOP(i, N) {
         int idx = i * D + labeldata[i];
-        dXdata[idx] = -dYdata[i] / fmaxf(Xdata[idx], log_threshold) * -rate / N;
+        dXdata[idx] = -dYdata[i] / fmaxf(Xdata[idx], log_threshold);
     }
 }
 
@@ -59,7 +59,7 @@ void CrossEntropy::forward(float *loss, const float *act, const int *labels) {
     LabelCrossEntropyKernel PAR(batch_size, 128)(batch_size, class_size, logits, labels, 1e-20, loss);
 }
 
-void CrossEntropy::backward(float *act_grad, float rate, const float* act, const float *loss_grad,
+void CrossEntropy::backward(float *act_grad, const float* act, const float *loss_grad,
                             const int *labels) {
     auto kAlgo = CUDNN_SOFTMAX_ACCURATE;
     auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
@@ -67,7 +67,7 @@ void CrossEntropy::backward(float *act_grad, float rate, const float* act, const
     auto logits = static_cast<float *>(global.get_workspace());
     auto logits_grad = static_cast<float *>(global.get_workspace()) + batch_size * class_size;
 
-    LabelCrossEntropyGradientKernel PAR(batch_size, 128)(batch_size, class_size, rate, logits, labels, loss_grad, 1e-20, logits_grad); 
+    LabelCrossEntropyGradientKernel PAR(batch_size, 128)(batch_size, class_size, logits, labels, loss_grad, 1e-20, logits_grad); 
     // dog_print("fuck", logits, {batch_size, class_size});
     auto st = cudnnSoftmaxBackward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io,
                                    logits, dsc_io, logits_grad, &zero, dsc_io,

@@ -162,9 +162,9 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(10000)) {
+    for(auto x : Range(100)) {
         auto offset_lb = x % (total / B) * B;
-        // offset_lb = 0;
+        offset_lb = 0;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
@@ -182,7 +182,7 @@ int main() {
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
         // eng.get_mm().l2_backward(losses, B, 0.1);
-        ce.backward(act_grad, 0.001 / sqrt(x + 1), act, losses, dev_labels.data().get());
+        ce.backward(act_grad,  act, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // dog_print("hhd", act, {B});
 
@@ -193,7 +193,7 @@ int main() {
             break;
         }
         if(x % 10 != 9) {
-            eng.step();
+            eng.get_mm().step(0.0001);
             cout << loss / B << " " << correct << endl;
         } else {
             cout << "test: " << loss / B << " " << correct << endl;

@@ -39,16 +39,26 @@ using namespace doglib::graph;
 
 struct OP1 {
     __host__ __device__ float operator()(float a, float b) {
+        if(b > 1){
+            b = 1;
+        }
+        if(b < -1){
+            b = -1;
+        }
         float x = 0.9 * a + b;
         return x;
     }
 };
 
 struct OP2 {
+    OP2(float x){
+        coef = x;
+    }
     __host__ __device__ float operator()(float a, float b) {
         // return a - 0.01 * a * a * a + b;
-        return a + b;
+        return a + b * coef;
     }
+    float coef;
 };
 //  stupid version
 //  definition:
@@ -100,11 +110,11 @@ class MemoryManager {
         thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
     }
 
-    void step() {
+    void step(float coef) {
         thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
                           weight_acc.begin(), OP1());
         thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
-                          weight.begin(), OP2());
+                          weight.begin(), OP2(-coef));
     }
 
   private:
@@ -163,10 +173,6 @@ class Engine {
     void backward_pass(float* logits_grad);
     void zero_grad() {
         mm.zero_grad();
-    }
-
-    void step() {
-        mm.step();
     }
 
     MemoryManager& get_mm() {
