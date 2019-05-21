@@ -120,9 +120,9 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
 
-    auto shortcut = x;
+    // auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, features, hidden);
-    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
@@ -162,7 +162,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(100)) {
+    for(auto x : Range(10000)) {
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
@@ -182,7 +182,7 @@ int main() {
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
         // eng.get_mm().l2_backward(losses, B, 0.1);
-        ce.backward(act_grad, 0.1 / sqrt(x + 1), act, losses, dev_labels.data().get());
+        ce.backward(act_grad, 0.001 / sqrt(x + 1), act, losses, dev_labels.data().get());
         // dog_print("SS", act_grad, dim_t{B, classes});
         // dog_print("hhd", act, {B});
 
