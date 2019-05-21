@@ -53,6 +53,7 @@ void CrossEntropy::forward(float *loss, const float *act, const int *labels) {
     auto kMode = CUDNN_SOFTMAX_MODE_INSTANCE;
     float one = 1.0, zero = 0.0;
     auto logits = static_cast<float *>(global.get_workspace());
+    thrust::fill_n(thrust::device, logits, 2 * batch_size * class_size, 0);
     cudnnSoftmaxForward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io, act, &zero,
                         dsc_io, logits);
     LabelCrossEntropyKernel PAR(batch_size, 128)(batch_size, class_size, logits, labels, 1e-20, loss);
@@ -67,7 +68,7 @@ void CrossEntropy::backward(float *act_grad, float rate, const float* act, const
     auto logits_grad = static_cast<float *>(global.get_workspace()) + batch_size * class_size;
 
     LabelCrossEntropyGradientKernel PAR(batch_size, 128)(batch_size, class_size, rate, logits, labels, loss_grad, 1e-20, logits_grad); 
-    dog_print("fuck", logits, {batch_size, class_size});
+    // dog_print("fuck", logits, {batch_size, class_size});
     auto st = cudnnSoftmaxBackward(global.cudnn_handle(), kAlgo, kMode, &one, dsc_io,
                                    logits, dsc_io, logits_grad, &zero, dsc_io,
                                    act_grad);

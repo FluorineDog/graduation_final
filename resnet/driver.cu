@@ -164,7 +164,7 @@ int main() {
     global.update_workspace_size(ce.workspace());
     for(auto x : Range(100)) {
         auto offset_lb = x % (total / B) * B;
-        offset_lb = 0;
+        // offset_lb = 0;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
