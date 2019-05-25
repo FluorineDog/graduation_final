@@ -4,6 +4,26 @@
 #include "../doglib/graph/graph.h"
 #include "../doglib/graph/procedure.h"
 #include <random>
+inline void show_weight(std::string name, device_vector<float>& wtf){
+    int N = 28 * 28;
+    int K = 20;
+    int M = 10;
+    assert(wtf.size() == N * K + K + (K * K) + K + K * M + M);
+    host_vector<float> hoster = wtf;
+    float* ref = hoster.data();
+    // skip
+    ref += N * K + K;
+    dog_print(name + "W", ref, {K, K});
+    ref += K * K;
+    dog_print(name +"b", ref, {K});
+    ref += K;
+    dog_print(name + "W2", ref, {K, M});
+    ref += K * M;
+    dog_print(name +"b2", ref, {M});
+    ref += M;
+    cout << endl << "......................." << endl;
+}
+
 // template <class T>
 inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
                           bool set_value = false) {
@@ -105,10 +125,14 @@ class MemoryManager {
     }
 
     void step(float coef) {
-        thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
-                          weight_acc.begin(), OP1());
-        thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
-                          weight.begin(), OP2(-coef));
+        // thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
+        //                   weight_acc.begin(), OP1());
+        // thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
+        //                   weight.begin(), OP2(-coef));
+        cout << endl << "*************************" << endl;
+        show_weight("", weight);
+        show_weight("@", weight_grad);
+        thrust::transform(weight.begin(), weight.end(), weight_grad.begin(), weight.begin(), OP2(-coef));
     }
 
   private:

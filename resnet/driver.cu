@@ -16,46 +16,46 @@ int main() {
     // auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, features, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
 
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
     eng.finish_off();
     
-    auto total = 60000;
-    host_vector<float> data_raw = get_data();
-    host_vector<int> labels_raw = get_labels();
+    // auto total = 60000;
+    // host_vector<float> data_raw = get_data();
+    // host_vector<int> labels_raw = get_labels();
 
-    // auto total = B;
-    // host_vector<float> data_raw;
-    // host_vector<int> labels_raw;
-    // data_raw.resize(B * 1000);
-    // std::default_random_engine e(201);
-    // for(auto& x : data_raw) {
-    //     x = (float)(e() % 10001) / 5000 - 1;
-    // }
-    // for(auto id : Range(B)) {
-    //     float sum = 0;
-    //     for(auto x : Range(features)) {
-    //         sum += data_raw[id * features + x];
-    //     }
-    //     int label = sum >= 0 ? 1 : 0;
-    //     labels_raw.push_back(label);
-    // }
+    auto total = B;
+    host_vector<float> data_raw;
+    host_vector<int> labels_raw;
+    data_raw.resize(B * 1000);
+    std::default_random_engine e(201);
+    for(auto& x : data_raw) {
+        x = (float)(e() % 10001) / 5000 - 1;
+    }
+    for(auto id : Range(B)) {
+        float sum = 0;
+        for(auto x : Range(features)) {
+            sum += data_raw[id * features + x];
+        }
+        int label = sum >= 0 ? 1 : 0;
+        labels_raw.push_back(label);
+    }
 
-    for(auto x: labels_raw){
-        cout << x; 
-    }  
+    // for(auto x: labels_raw){
+    //     cout << x; 
+    // }  
     cout << endl;
 
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(10000)) {
+    for(auto x : Range(20)) {
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
@@ -85,11 +85,11 @@ int main() {
         if(loss != loss) {
             break;
         }
-        if(offset_lb) {
-            eng.get_mm().step(0.001);
-            cout << loss / B << " " << correct << endl;
-        } else {
-            cout << "test: " << loss / B << " " << correct << endl;
-        }
+        // if(offset_lb) {
+        eng.get_mm().step(0.001);
+        cout << loss / B << " " << correct << endl;
+        // } else {
+        //     cout << "test: " << loss / B << " " << correct << endl;
+        // }
     }
 }
