@@ -76,7 +76,7 @@ class FCFunctor {
         // auto bias = weight + in_size * out_size;
         // float float_one = 1.0;
         // float float_zero = 0.0;
-        sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad);
+        sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad, true);
     }
 
   private:

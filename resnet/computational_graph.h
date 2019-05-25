@@ -131,9 +131,8 @@ class MemoryManager {
         //                   weight_acc.begin(), OP1());
         // thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
         //                   weight.begin(), OP2(-coef));
-        cout << endl << "*************************" << endl;
-        show_weight("", weight);
-        show_weight("@", weight_grad);
+        // show_weight("", weight);
+        // show_weight("@", weight_grad);
         thrust::transform(weight.begin(), weight.end(), weight_grad.begin(), weight.begin(), OP2(-coef));
     }
 
