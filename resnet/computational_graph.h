@@ -117,11 +117,13 @@ class MemoryManager {
         mapping.clear();
     }
     void zero_grad() {
-        for(auto pr : mapping) {
+        for(auto& pr : mapping) {
             auto& vec = pr.second;
-            thrust::fill(vec.begin(), vec.end(), 0);
+            auto ptr = vec.data().get();
+            thrust::fill(thrust::device, vec.begin(), vec.end(), 0);
+            assert(inspect(ptr) == 0);
         }
-        thrust::fill(weight_grad.begin(), weight_grad.end(), 0);
+        thrust::fill(thrust::device, weight_grad.begin(), weight_grad.end(), 0);
     }
 
     void step(float coef) {

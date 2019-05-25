@@ -4,7 +4,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 10;
+    int B = 20;
     int features = 28*28;
     int hidden = 20;
     int classes = 10;
@@ -15,9 +15,9 @@ int main() {
 
     // auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, features, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
@@ -34,7 +34,7 @@ int main() {
     host_vector<float> data_raw;
     host_vector<int> labels_raw;
     data_raw.resize(B * 1000);
-    std::default_random_engine e(201);
+    std::default_random_engine e(2);
     for(auto& x : data_raw) {
         x = (float)(e() % 10001) / 5000 - 1;
     }

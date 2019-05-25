@@ -41,9 +41,11 @@ class FCFunctor {
     void backward(float* in_grad, float* weight_grad, const float* in,
                   const float* out_grad, const float* weight) {
         if(weight_grad){
+            assert(inspect(weight_grad) == 0);
             backwardFilter(weight_grad, in, out_grad);
         }
         if(in_grad) {
+            assert(inspect(in_grad) == 0);
             backwardData(in_grad, weight, out_grad);
         }
     }
@@ -74,7 +76,7 @@ class FCFunctor {
         // auto bias = weight + in_size * out_size;
         // float float_one = 1.0;
         // float float_zero = 0.0;
-        sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad, true);
+        sgemm(false, true, batch, out_size, in_size, out_grad, weight, in_grad);
     }
 
   private:

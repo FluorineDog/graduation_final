@@ -3,6 +3,7 @@
 #include "../helper/common.h"
 #include <random>
 #include <thrust/count.h>
+#include <iomanip>
 #include <thrust/device_vector.h>
 
 inline void dog_print(std::string name, const float* ptr, const dim_t& dim) {
@@ -21,7 +22,13 @@ inline void dog_print(std::string name, const float* ptr, const dim_t& dim) {
             index_cpy /= x;
             cout << "--------" << endl;
         }
-        cout << vec[index] << " ";
+        cout.precision(3);
+        cout << std::setw(6) << vec[index] << " ";
     }
     cout << endl << "##########" << endl;
+}
+inline float inspect(float* dev_ptr) {
+    float tmp;
+    cudaMemcpy(&tmp, dev_ptr, sizeof(float), cudaMemcpyDefault);
+    return tmp;
 }
