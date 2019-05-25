@@ -6,7 +6,7 @@ int main() {
     // define network structure
     int B = 10;
     int features = 28*28;
-    int hidden = 28 *28;
+    int hidden = 20;
     int classes = 10;
     dim_t input_dim = {B, features};
 
