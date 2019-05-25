@@ -39,12 +39,6 @@ using namespace doglib::graph;
 
 struct OP1 {
     __host__ __device__ float operator()(float a, float b) {
-        if(b > 1){
-            b = 1;
-        }
-        if(b < -1){
-            b = -1;
-        }
         float x = 0.9 * a + b;
         return x;
     }
