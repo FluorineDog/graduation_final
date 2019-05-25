@@ -8,7 +8,7 @@
 inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
                           bool set_value = false) {
     auto sz = get_volume(dim);
-    std::normal_distribution<double> distribution(0, 0.01);
+    std::normal_distribution<double> distribution(0, 0.1);
     std::default_random_engine e(3);
     vec_vec.resize(sz);
     thrust::host_vector<float> host_vec(sz, 0);

@@ -4,7 +4,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 1000;
+    int B = 10;
     int features = 28*28;
     int hidden = 28 *28;
     int classes = 10;
@@ -57,7 +57,7 @@ int main() {
     global.update_workspace_size(ce.workspace());
     for(auto x : Range(10000)) {
         auto offset_lb = x % (total / B) * B;
-        offset_lb = 0;
+        // offset_lb = 0;
         auto offset_dt = offset_lb * features;
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
@@ -86,7 +86,7 @@ int main() {
             break;
         }
         if(offset_lb) {
-            eng.get_mm().step(0.00001 / B);
+            eng.get_mm().step(0.001);
             cout << loss / B << " " << correct << endl;
         } else {
             cout << "test: " << loss / B << " " << correct << endl;
