@@ -1,6 +1,6 @@
 #pragma once
 #include "../doglib/graph/procedure.h"
-#include "cg.h"
+#include "visitors.h"
 #include "components/cross_entropy.h"
 #include <random>
 #include <thrust/count.h>
