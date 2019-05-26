@@ -65,9 +65,10 @@ class ForwardVisitor : public Visitor {
     ForwardVisitor(Engine& eng) : eng(eng), input_(nullptr) {}
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
         auto out = mm.get(n.out_id);
         auto in = mm.get(n.in_id);
-        auto weight = mm.get_weight(n.out_id);
+        auto weight = opt.get_weight(n.out_id);
         n.functor.forward(out, in, weight);
     }
     virtual void visit(ActivationNode& n) override {
@@ -116,12 +117,14 @@ class BackwardVisitor : public Visitor {
     BackwardVisitor(Engine& eng) : eng(eng) {}
     virtual void visit(FCNode& n) override {
         auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
         auto out = mm.get(n.out_id);
         auto in = mm.get(n.in_id);
         auto out_grad = mm.get(~n.out_id);
         auto in_grad = mm.get(~n.in_id);
-        auto weight = mm.get_weight(n.out_id);
-        auto weight_grad = mm.get_weight_grad(n.out_id);
+
+        auto weight = opt.get_weight(n.out_id);
+        auto weight_grad = opt.get_weight_grad(n.out_id);
         n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
     }
     virtual void visit(ActivationNode& n) override {

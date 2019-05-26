@@ -86,7 +86,7 @@ int main() {
             break;
         }
         if(offset_lb) {
-            eng.get_mm().step(0.001/B);
+            eng.get_opt().step(0.001/B);
             cout << loss / B << " " << correct << endl;
         } else {
             cout << "test: " << loss / B << " " << correct << endl;

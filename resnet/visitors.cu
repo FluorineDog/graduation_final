@@ -37,10 +37,10 @@ void Engine::register_weight_maps() {
     dfs.set_visitor(Transfer::finish, [&, this](int, int id) {
         auto& node = *this->nodes[id];
         auto size = meta.weight_size(node);
-        mm.register_weight(id, size);
+        opt.register_weight(id, size);
     });
     dfs.execute_at(dest_node);
-    mm.finish_weight();
+    opt.finish_weight();
 }
 
 void Engine::forward_pass(float* input) {
