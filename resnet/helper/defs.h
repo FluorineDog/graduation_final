@@ -18,6 +18,7 @@ class Visitor {
     // virtual void visit(class VariableNode&) = 0;
     virtual void visit(class AddNode&) = 0;
     virtual void visit(class BatchNormNode& ) = 0;
+    // virtual void visit(class PoolingNode& ) = 0;
     ~Visitor() = default;
 };
 
@@ -57,6 +58,16 @@ struct ActivationNode : NodeBase {
     }
 };
 
+struct PlaceHolderNode : NodeBase {
+    PlaceHolderNode(int x, dim_t dim) : node_id(x), dim(dim), size(get_volume(dim)) {}
+    int node_id;
+    dim_t dim;
+    int size;
+    void accept(Visitor& v) override {
+        return v.visit(*this);
+    }
+};
+
 struct BatchNormNode : NodeBase {
     BatchNormNode(int in_id, int out_id, dim_t dim)
         : in_id(in_id), out_id(out_id), functor(dim) {}
@@ -68,14 +79,17 @@ struct BatchNormNode : NodeBase {
     }
 };
 
-struct PlaceHolderNode : NodeBase {
-    PlaceHolderNode(int x, dim_t dim) : node_id(x), dim(dim), size(get_volume(dim)) {}
-    int node_id;
-    dim_t dim;
-    int size;
-    void accept(Visitor& v) override {
-        return v.visit(*this);
-    }
-};
+// struct PoolingNode : NodeBase {
+//     PoolingNode(int in_id, int out_id, int H, int W, int padding, int stride)
+//         : in_id(in_id), out_id(out_id), functor(H, W, padding, stride) {}
+//     int in_id;
+//     int out_id;
+//     PoolingDescriptor functor;
+//     void accept(Visitor& v) override {
+//         return v.visit(*this);
+//     }
+// };
+
+
 
 // todo batchnorm, pooling, conv

@@ -13,14 +13,14 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
 
-    // auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, features, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    // x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
+    x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
 
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
@@ -55,7 +55,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
-    for(auto x : Range(20000)) {
+    for(auto x : Range(100000)) {
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
@@ -74,19 +74,22 @@ int main() {
         // dog_print("??", losses, dim_t{B});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
-        // eng.get_mm().l2_backward(losses, B, 0.1);
-        ce.backward(act_grad, act, losses, dev_labels.data().get());
-        // dog_print("SS", act_grad, dim_t{B, classes});
-        // dog_print("hhd", act, {B});
-
-        eng.backward_pass(act_grad);
+        if(offset_lb) {
+            // eng.get_mm().l2_backward(losses, B, 0.1);
+            ce.backward(act_grad, act, losses, dev_labels.data().get());
+            // dog_print("SS", act_grad, dim_t{B, classes});
+            // dog_print("hhd", act, {B});
+            eng.backward_pass(act_grad);
+        }
         // auto correct = thrust::count_if(losses.begin(), losses.end(), functor());
         auto correct = get_acc(act, labels_beg, B, classes);
         if(loss != loss) {
             break;
         }
         if(offset_lb) {
-            eng.get_opt().step(0.001/B);
+            static float lr = 0.0002 / B;
+            eng.get_opt().step(lr);
+            // lr *= 0.99995;
             cout << loss / B << " " << correct << endl;
         } else {
             cout << "test: " << loss / B << " " << correct << endl;

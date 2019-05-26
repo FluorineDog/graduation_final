@@ -99,18 +99,19 @@ class Optimizer {
 
     void zero_grad() {
         thrust::fill(thrust::device, weight_grad.begin(), weight_grad.end(), 0);
+        thrust::fill(thrust::device, weight_grad.begin(), weight_grad.end(), 0);
     }
     
 
     void step(float coef) {
-        // thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
-        //                   weight_acc.begin(), OP1());
-        // thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
-        //                   weight.begin(), OP2(-coef));
+        thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
+                          weight_acc.begin(), OP1());
+        thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
+                          weight.begin(), OP2(-coef));
         // show_weight("", weight);
         // show_weight("@", weight_grad);
-        thrust::transform(weight.begin(), weight.end(), weight_grad.begin(),
-                          weight.begin(), OP2(-coef));
+        // thrust::transform(weight.begin(), weight.end(), weight_grad.begin(),
+        //                   weight.begin(), OP2(-coef));
     }
 
   private:

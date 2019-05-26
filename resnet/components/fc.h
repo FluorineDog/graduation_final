@@ -41,11 +41,11 @@ class FCFunctor {
     void backward(float* in_grad, float* weight_grad, const float* in,
                   const float* out_grad, const float* weight) {
         if(weight_grad){
-            assert(inspect(weight_grad) == 0);
+            // assert(inspect(weight_grad) == 0);
             backwardFilter(weight_grad, in, out_grad);
         }
         if(in_grad) {
-            assert(inspect(in_grad) == 0);
+            // assert(inspect(in_grad) == 0);
             backwardData(in_grad, weight, out_grad);
         }
     }

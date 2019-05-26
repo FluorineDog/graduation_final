@@ -26,7 +26,7 @@ class MemoryManager {
             auto& vec = pr.second;
             auto ptr = vec.data().get();
             thrust::fill(thrust::device, vec.begin(), vec.end(), 0);
-            assert(inspect(ptr) == 0);
+            // assert(inspect(ptr) == 0);
         }
     }
 
