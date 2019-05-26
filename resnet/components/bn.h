@@ -1,5 +1,5 @@
 #pragma once
-#include "../descriptor.h"
+#include "descriptor.h"
 
 class BatchNorm {
   public:

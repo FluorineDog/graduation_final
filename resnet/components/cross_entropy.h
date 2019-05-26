@@ -2,7 +2,7 @@
 #include <math.h>
 #include <cudnn.h>
 #include "../helper/global.h"
-#include "../descriptor.h"
+#include "descriptor.h"
 
 class CrossEntropy {
   public:

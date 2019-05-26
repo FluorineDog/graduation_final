@@ -1,5 +1,5 @@
 #pragma once
-#include "../descriptor.h"
+#include "../components/descriptor.h"
 #include "global.h"
 #include "../components/fc.h"
 #include "../components/bn.h"
