@@ -3,6 +3,8 @@
 #include "global.h"
 #include "../components/fc.h"
 #include "../components/bn.h"
+#include "../components/pooling.h"
+#include "../components/conv.h"
 #include "../components/activation.h"
 
 struct NodeBase {
@@ -17,8 +19,9 @@ class Visitor {
     virtual void visit(class PlaceHolderNode&) = 0;
     // virtual void visit(class VariableNode&) = 0;
     virtual void visit(class AddNode&) = 0;
-    virtual void visit(class BatchNormNode& ) = 0;
-    // virtual void visit(class PoolingNode& ) = 0;
+    virtual void visit(class BatchNormNode&) = 0;
+    virtual void visit(class PoolingNode&) = 0;
+    virtual void visit(class ConvolutionNode&) = 0;
     ~Visitor() = default;
 };
 
@@ -79,17 +82,29 @@ struct BatchNormNode : NodeBase {
     }
 };
 
-// struct PoolingNode : NodeBase {
-//     PoolingNode(int in_id, int out_id, int H, int W, int padding, int stride)
-//         : in_id(in_id), out_id(out_id), functor(H, W, padding, stride) {}
-//     int in_id;
-//     int out_id;
-//     PoolingDescriptor functor;
-//     void accept(Visitor& v) override {
-//         return v.visit(*this);
-//     }
-// };
+struct PoolingNode : NodeBase {
+    PoolingNode(int in_id, int out_id, int H, int W, int padding, int stride)
+        : in_id(in_id), out_id(out_id), functor(H, W, padding, stride) {}
+    int in_id;
+    int out_id;
+    PoolingFunctor functor;
+    void accept(Visitor& v) override {
+        return v.visit(*this);
+    }
+};
 
-
+struct ConvolutionNode : NodeBase {
+    ConvolutionNode(int in_id, int out_id, dim_t dims_in, int C_out, int K, int group,
+                    int padding, int stride, int dilation = 1)
+        : in_id(in_id),
+          out_id(out_id),
+          functor(dims_in, C_out, K, group, padding, stride, dilation) {}
+    int in_id;
+    int out_id;
+    ConvolutionFunctor functor;
+    void accept(Visitor& v) override {
+        return v.visit(*this);
+    }
+};
 
 // todo batchnorm, pooling, conv

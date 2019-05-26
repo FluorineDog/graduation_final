@@ -31,14 +31,14 @@ static dim_t calc_dims_out(      //
 
 class ConvolutionFunctor {
   public:
-    ConvolutionFunctor(dim_t dims_in, dim_t dims_filter, int group, int padding,
+    ConvolutionFunctor(dim_t dims_in, int C_out, int K, int group, int padding,
                        int stride, int dilation)
         : dsc_conv(padding, stride, dilation, group),
           dsc_in(dims_in),
-          dsc_filter(dims_filter),
+          dsc_filter(dim_t{dims_in[1], C_out, K, K}),
           params_{group, padding, stride, dilation} {
         dim_t dims_out =
-            calc_dims_out(dims_in, dims_filter, group, padding, stride, dilation);
+            calc_dims_out(dsc_in.dims(), dsc_filter.dims(), group, padding, stride, dilation);
         dsc_out.init(dims_out);
     }
     void forward(float* out, const float* in, const float* filter) {
@@ -62,7 +62,7 @@ class ConvolutionFunctor {
         backwardFilter(weight_grad, out_grad, in);
     }
 
-    dim_t get_dims_out() {
+    dim_t dims_out() {
         // TODO: Change to cudnn routine
         return dsc_out.dims();
     }
@@ -71,7 +71,7 @@ class ConvolutionFunctor {
         return get_volume(dsc_filter.dims());
     }
 
-    size_t get_workspace() {
+    size_t get_workspace_size() {
         return std::max(workspace_bwd_data(),
                         std::max(workspace_bwd_filter(), workspace_fwd()));
     }

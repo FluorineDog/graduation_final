@@ -14,7 +14,9 @@ class PoolingFunctor {
         cudnnPoolingForward(global.cudnn_handle(), dsc_pool, &alpha, dsc_in, in, &beta,
                             dsc_out, out);
     }
-    void get_dims_out() {}
+    dim_t dims_out() {
+        return dsc_out;
+    }
     void backward(float* in_grad, const float* in, const float* out_grad,
                   const float* out) {
         float alpha = 1.0;

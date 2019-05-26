@@ -29,6 +29,18 @@ class MetaVisitor : public Visitor {
         map_dim = n.functor.out_dim();
         workspace = 0;
     }
+    virtual void visit(PoolingNode& n) override {
+        weight_sz = 0;
+        map_dim = n.functor.dims_out();
+        workspace = 0;
+    }
+
+    virtual void visit(ConvolutionNode& n) override {
+        weight_sz = n.functor.get_weight_size();
+        map_dim = n.functor.dims_out();
+        workspace = n.functor.get_workspace_size();
+    }
+
     struct Meta {
         size_t weight_sz;
         dim_t map_dim;
@@ -96,7 +108,15 @@ class ForwardVisitor : public Visitor {
     void set(float* input) {
         input_ = input;
     }
-    virtual void visit(BatchNormNode& n) override {}
+    virtual void visit(BatchNormNode& n) override {
+        assert(false);
+        auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
+        auto weight = opt.get_weight(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out = mm.get(n.out_id);
+        n.functor.forward(out, in, weight);
+    }
 
   private:
     float* input_;
