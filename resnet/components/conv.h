@@ -79,10 +79,11 @@ class ConvolutionFunctor {
   private:
     size_t workspace_fwd() {
         auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
-        size_t workspace_size;
-        cudnnGetConvolutionForwardWorkspaceSize(global.cudnn_handle(), dsc_in, dsc_filter,
+        size_t workspace_size = 0;
+        auto status = cudnnGetConvolutionForwardWorkspaceSize(global.cudnn_handle(), dsc_in, dsc_filter,
                                                 dsc_conv, dsc_out, kAlgo,
                                                 &workspace_size);
+        
         return workspace_size;
     }
     void backwardData(float* in_grad, const float* out_grad, const float* filter) {

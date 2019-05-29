@@ -4,7 +4,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 200;
+    int B = 2;
     int features = 28 * 28;
     int hidden = 1000;
     int classes = 10;
@@ -13,14 +13,15 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
 
-    x = eng.insert_node<FCNode>(x, B, features, hidden);
+    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, 1, 28, 28}, /*C_out*/ 3,
+                                         /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
+                                         /*stride*/ 1, /*dilation*/ 1);
+
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, 3 * 28 * 28});
+    x = eng.insert_node<FCNode>(x, B, 3 * 28 * 28, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    auto shortcut = x;
     x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_blend<AddNode>(x, shortcut, dim_t{B, hidden});
 
     x = eng.insert_node<FCNode>(x, B, hidden, classes);
     eng.dest_node = x;
