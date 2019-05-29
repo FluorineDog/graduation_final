@@ -42,11 +42,12 @@ class TensorDescriptor {
 
     void init(dim_t dims) {
         dims_ = dims;
-        if(dims_.size() < 4){
+        if(dims_.size() < 4) {
             dims_.resize(4, 1);
         }
         auto strides = get_strides(dims_);
-        cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
+        auto status =cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
+        assert(status == CUDNN_STATUS_SUCCESS);
     }
 
   private:
@@ -104,11 +105,11 @@ class ConvolutionDescriptor {
 
   private:
     void init() {
-        auto dual_pack = [](int x) { return dim_t{x, x}; };
-        cudnnSetConvolutionNdDescriptor(desc_, 2, dual_pack(padding_), dual_pack(stride_),
-                                        dual_pack(dilation_), CUDNN_CONVOLUTION,
+        // auto dual_pack = [](int x) { return dim_t{x, x}; };
+        cudnnSetConvolution2dDescriptor(desc_, padding_, padding_, stride_, stride_,
+                                        dilation_, dilation_, CUDNN_CONVOLUTION,
                                         kDataType);
-        cudnnSetConvolutionGroupCount(desc_, group_);
+        // cudnnSetConvolutionGroupCount(desc_, group_);
     }
 
     cudnnConvolutionDescriptor_t desc_;
@@ -124,7 +125,7 @@ class ActivationDescriptor {
         cudnnCreateActivationDescriptor(&desc_);
         auto kMode = CUDNN_ACTIVATION_RELU;
         auto kNan = CUDNN_PROPAGATE_NAN;
-        cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);  
+        cudnnSetActivationDescriptor(desc_, kMode, kNan, 0.0);
     }
     ActivationDescriptor(const ActivationDescriptor&) = delete;
     ActivationDescriptor& operator=(const ActivationDescriptor&) = delete;
