@@ -15,7 +15,7 @@ class PoolingFunctor {
                             dsc_out, out);
     }
     dim_t dims_out() {
-        return dsc_out;
+        return dsc_out.dims();
     }
     void backward(float* in_grad, const float* in, const float* out_grad,
                   const float* out) {

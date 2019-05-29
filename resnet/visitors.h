@@ -118,6 +118,25 @@ class ForwardVisitor : public Visitor {
         n.functor.forward(out, in, weight);
     }
 
+    virtual void visit(ConvolutionNode& n) override {
+        assert(false);
+        auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
+        auto weight = opt.get_weight(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out = mm.get(n.out_id);
+        n.functor.forward(out, in, weight);
+    }
+
+    virtual void visit(PoolingNode& n) override {
+        assert(false);
+        auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
+        auto in = mm.get(n.in_id);
+        auto out = mm.get(n.out_id);
+        n.functor.forward(out, in);
+    }
+
   private:
     float* input_;
     Engine& eng;
@@ -130,6 +149,8 @@ class FakeVisitor : public Visitor {
     virtual void visit(PlaceHolderNode& n) override {}
     virtual void visit(AddNode& n) override {}
     virtual void visit(BatchNormNode& n) override {}
+    virtual void visit(ConvolutionNode& n) override {}
+    virtual void visit(PoolingNode& n) override {}
 };
 
 class BackwardVisitor : public Visitor {
@@ -147,6 +168,7 @@ class BackwardVisitor : public Visitor {
         auto weight_grad = opt.get_weight_grad(n.out_id);
         n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
     }
+
     virtual void visit(ActivationNode& n) override {
         auto& mm = eng.get_mm();
         auto out = mm.get(n.out_id);
@@ -171,7 +193,39 @@ class BackwardVisitor : public Visitor {
     }
 
     virtual void visit(BatchNormNode& n) override {
-        // todo
+        auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
+        auto out = mm.get(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out_grad = mm.get(~n.out_id);
+        auto in_grad = mm.get(~n.in_id);
+        auto weight = opt.get_weight(n.out_id);
+        auto weight_grad = opt.get_weight_grad(n.out_id);
+        n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
+ 
     }
+
+    virtual void visit(ConvolutionNode& n) override {
+        auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
+        auto out = mm.get(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out_grad = mm.get(~n.out_id);
+        auto in_grad = mm.get(~n.in_id);
+        auto weight = opt.get_weight(n.out_id);
+        auto weight_grad = opt.get_weight_grad(n.out_id);
+        n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
+    }
+
+    virtual void visit(PoolingNode& n) override {
+        auto& mm = eng.get_mm();
+        auto& opt = eng.get_opt();
+        auto out = mm.get(n.out_id);
+        auto in = mm.get(n.in_id);
+        auto out_grad = mm.get(~n.out_id);
+        auto in_grad = mm.get(~n.in_id);
+        n.functor.backward(in_grad, in, out_grad, out);
+    }
+
     Engine& eng;
 };
