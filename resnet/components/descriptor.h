@@ -148,11 +148,11 @@ class ActivationDescriptor {
 
 class PoolingDescriptor {
   public:
-    explicit PoolingDescriptor(int H, int W, int padding, int stride) {
+    explicit PoolingDescriptor(int K, int padding, int stride) {
         cudnnCreatePoolingDescriptor(&desc_);
         auto kMode = CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
         auto kNan = CUDNN_PROPAGATE_NAN;
-        cudnnSetPooling2dDescriptor(desc_, kMode, kNan, H, W, padding, padding, stride,
+        cudnnSetPooling2dDescriptor(desc_, kMode, kNan, K, K, padding, padding, stride,
                                     stride);
     }
     PoolingDescriptor(const PoolingDescriptor&) = delete;

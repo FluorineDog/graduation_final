@@ -129,7 +129,7 @@ class ForwardVisitor : public Visitor {
     }
 
     virtual void visit(PoolingNode& n) override {
-        assert(false);
+        // assert(false);
         auto& mm = eng.get_mm();
         auto& opt = eng.get_opt();
         auto in = mm.get(n.in_id);

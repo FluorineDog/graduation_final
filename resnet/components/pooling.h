@@ -4,15 +4,22 @@
 
 class PoolingFunctor {
   public:
-    PoolingFunctor(int H, int W, int padding, int stride)
-        : dsc_pool(H, W, padding, stride) {
-            
+    PoolingFunctor(dim_t in, int K, int padding, int stride)
+        : dsc_pool(K, padding, stride), dsc_in(in) {
+        init();
+    }
+    void init() {
+        int n, c, h, w;
+        auto st = cudnnGetPooling2dForwardOutputDim(dsc_pool, dsc_in, &n, &c, &h, &w);
+        dsc_out.init(dim_t{n, c, h, w});
+        check(st);
     }
     void forward(float* out, const float* in) {
         float alpha = 1.0;
         float beta = 0.0;
-        cudnnPoolingForward(global.cudnn_handle(), dsc_pool, &alpha, dsc_in, in, &beta,
-                            dsc_out, out);
+        auto st = cudnnPoolingForward(global.cudnn_handle(), dsc_pool, &alpha, dsc_in, in,
+                                      &beta, dsc_out, out);
+        check(st);
     }
     dim_t dims_out() {
         return dsc_out.dims();
@@ -21,8 +28,10 @@ class PoolingFunctor {
                   const float* out) {
         float alpha = 1.0;
         float beta = 1.0;
-        cudnnPoolingBackward(global.cudnn_handle(), dsc_pool, &alpha, dsc_out, out,
-                             dsc_out, out_grad, dsc_in, in, &beta, dsc_in, in_grad);
+        auto st =
+            cudnnPoolingBackward(global.cudnn_handle(), dsc_pool, &alpha, dsc_out, out,
+                                 dsc_out, out_grad, dsc_in, in, &beta, dsc_in, in_grad);
+        check(st);
     }
 
   private:

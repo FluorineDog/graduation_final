@@ -29,17 +29,20 @@ int main() {
     x = eng.insert_node<BatchNormNode>(x, dim_t{B, c, hw, hw});
     x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
     x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 256,
-                                         /*kernel*/ 7, /*group*/ 1, /*padding*/ 0,
+                                         /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
                                          /*stride*/ 2, /*dilation*/ 1);
     c = 256;
-    hw = 1;
+    hw = 4;
     x = eng.insert_node<BatchNormNode>(x, dim_t{B, c, hw, hw});
     x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<PoolingNode>(x, dim_t{B, c, hw, hw}, /*kernel*/2, /*padding*/0, /*stride*/2); 
     // x = eng.insert_node<FCNode>(x, B, 3 * 28 * 28, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
 
+    c = 256;
+    hw = 2;
     x = eng.insert_node<FCNode>(x, B, c * hw * hw, classes);
     eng.dest_node = x;
     eng.finish_off();

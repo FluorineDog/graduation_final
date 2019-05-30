@@ -83,8 +83,8 @@ struct BatchNormNode : NodeBase {
 };
 
 struct PoolingNode : NodeBase {
-    PoolingNode(int in_id, int out_id, int H, int W, int padding, int stride)
-        : in_id(in_id), out_id(out_id), functor(H, W, padding, stride) {}
+    PoolingNode(int in_id, int out_id, dim_t in, int K, int padding, int stride)
+        : in_id(in_id), out_id(out_id), functor(in, K, padding, stride) {}
     int in_id;
     int out_id;
     PoolingFunctor functor;
