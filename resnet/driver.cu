@@ -13,17 +13,17 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
 
-    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, 1, 28, 28}, /*C_out*/ 3,
+    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, 1, 28, 28}, /*C_out*/ 6,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
                                          /*stride*/ 1, /*dilation*/ 1);
 
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, 3 * 28 * 28});
-    x = eng.insert_node<FCNode>(x, B, 3 * 28 * 28, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
-    x = eng.insert_node<FCNode>(x, B, hidden, hidden);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, 6 * 28 * 28});
+    // x = eng.insert_node<FCNode>(x, B, 3 * 28 * 28, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
+    // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
 
-    x = eng.insert_node<FCNode>(x, B, hidden, classes);
+    x = eng.insert_node<FCNode>(x, B, 6 * 28 * 28, classes);
     eng.dest_node = x;
     eng.finish_off();
 
