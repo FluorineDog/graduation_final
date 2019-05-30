@@ -43,7 +43,7 @@ class TensorDescriptor {
         size_t size;
         cudnnGetTensorSizeInBytes(desc_, &size);
         assert(size < (1ULL <<31));
-        dims_ = dim_t{1, (int)size};
+        dims_ = dim_t{1, (int)size / 4};
     }
 
     void init(dim_t dims) {

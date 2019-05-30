@@ -3,7 +3,8 @@
 
 class BatchNorm {
   public:
-    static constexpr auto kMode = CUDNN_BATCHNORM_SPATIAL_PERSISTENT;
+    static constexpr auto kMode = CUDNN_BATCHNORM_SPATIAL;
+    static constexpr auto kOp = CUDNN_BATCHNORM_OPS_BN_ACTIVATION;
     BatchNorm(dim_t dims) : dsc_io(dims), fwd_counter(0) {
         cudnnDeriveBNTensorDescriptor(dsc_bn, dsc_io, kMode);
         dsc_bn.recover();
@@ -21,15 +22,17 @@ class BatchNorm {
         auto bnSavedVar = 3 * bn_size + (T*)extra;
         ++fwd_counter;
         if(global.is_training()) {
-            cudnnBatchNormalizationForwardTraining(
+            auto st = cudnnBatchNormalizationForwardTraining(
                 global.cudnn_handle(), kMode, &alpha, &beta, dsc_io, in, dsc_io, out,
                 dsc_bn, bnScale, bnBias, 1.0 / fwd_counter, bnRunningMean, bnRunningVar,
                 CUDNN_BN_MIN_EPSILON, bnSavedMean, bnSavedVar);
+            check(st);
         } else {
-            cudnnBatchNormalizationForwardInference(
+            auto st = cudnnBatchNormalizationForwardInference(
                 global.cudnn_handle(), kMode, &alpha, &beta, dsc_io, in, dsc_io, out,
                 dsc_bn, bnScale, bnBias, bnRunningMean, bnRunningVar,
                 CUDNN_BN_MIN_EPSILON);
+            check(st);
         }
     }
     size_t weight_size() {
