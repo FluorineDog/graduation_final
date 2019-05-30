@@ -32,3 +32,7 @@ inline float inspect(float* dev_ptr) {
     cudaMemcpy(&tmp, dev_ptr, sizeof(float), cudaMemcpyDefault);
     return tmp;
 }
+
+inline void check(cudnnStatus_t status){
+    assert(status == CUDNN_STATUS_SUCCESS);
+}

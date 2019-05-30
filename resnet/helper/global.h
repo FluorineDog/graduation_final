@@ -31,7 +31,7 @@ class Global {
         }
     }
     size_t get_workspace_size() {
-        return workspace_.size();
+        return workspace_.size() * sizeof(float);
     }
 
   private:

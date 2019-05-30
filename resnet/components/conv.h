@@ -16,15 +16,17 @@ class ConvolutionFunctor {
     }
     void forward(float* out, const float* in, const float* filter) {
         float alpha = 1, beta = 0;
-        auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
-        cudnnConvolutionForward(global.cudnn_handle(), &alpha,                          //
-                                dsc_in, in,                                             //
-                                dsc_filter, filter,                                     //
-                                dsc_conv, kAlgo,                                        //
-                                global.get_workspace(), global.get_workspace_size(),    //
-                                &beta,                                                  //
-                                dsc_out, out                                            //
+        auto kAlgo = algo_.fwd;
+        auto st = cudnnConvolutionForward(global.cudnn_handle(), &alpha,    //
+                                          dsc_in, in,                       //
+                                          dsc_filter, filter,               //
+                                          dsc_conv, kAlgo,                  //
+                                          global.get_workspace(),
+                                          global.get_workspace_size(),    //
+                                          &beta,                          //
+                                          dsc_out, out                    //
         );
+        check(st);
     }
 
     void backward(float* in_grad, float* weight_grad, const float* in,
@@ -45,54 +47,57 @@ class ConvolutionFunctor {
     }
 
     size_t get_workspace_size() {
-        return std::max(workspace_bwd_data(),
+        auto k =  std::max(workspace_bwd_data(),
                         std::max(workspace_bwd_filter(), workspace_fwd()));
+        return k;
     }
 
   private:
     size_t workspace_fwd() {
-        auto kAlgo = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED;
+        auto kAlgo = algo_.fwd;
         size_t workspace_size = 0;
-        auto status = cudnnGetConvolutionForwardWorkspaceSize(
-            global.cudnn_handle(), dsc_in, dsc_filter, dsc_conv, dsc_out, kAlgo,
-            &workspace_size);
-        assert(status == CUDNN_STATUS_SUCCESS);
+        auto st = cudnnGetConvolutionForwardWorkspaceSize(global.cudnn_handle(), dsc_in,
+                                                          dsc_filter, dsc_conv, dsc_out,
+                                                          kAlgo, &workspace_size);
+        check(st);
         return workspace_size;
     }
     void backwardData(float* in_grad, const float* out_grad, const float* filter) {
-        auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
+        auto kAlgo = algo_.bwd_data;
         float alpha = 1, beta = 1.0;
-        cudnnConvolutionBackwardData(global.cudnn_handle(), &alpha, dsc_filter, filter,
-                                     dsc_out, out_grad, dsc_conv, kAlgo,
-                                     global.get_workspace(), global.get_workspace_size(),
-                                     &beta, dsc_in, in_grad);
+        auto st = cudnnConvolutionBackwardData(
+            global.cudnn_handle(), &alpha, dsc_filter, filter, dsc_out, out_grad,
+            dsc_conv, kAlgo, global.get_workspace(), global.get_workspace_size(), &beta,
+            dsc_in, in_grad);
+        check(st);
     }
 
     size_t workspace_bwd_data() {
-        auto kAlgo = CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
+        auto kAlgo = algo_.bwd_data;
         size_t workspace_size;
-        auto status = cudnnGetConvolutionBackwardDataWorkspaceSize(
+        auto st = cudnnGetConvolutionBackwardDataWorkspaceSize(
             global.cudnn_handle(), dsc_filter, dsc_out, dsc_conv, dsc_in, kAlgo,
             &workspace_size);
-
-        assert(status == CUDNN_STATUS_SUCCESS);
+        check(st);
         return workspace_size;
     }
     void backwardFilter(float* filter_grad, const float* out_grad, const float* in) {
-        auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
+        auto kAlgo = algo_.bwd_filter;
         float alpha = 1, beta = 1.0;
-        cudnnConvolutionBackwardFilter(global.cudnn_handle(), &alpha, dsc_in, in, dsc_out,
-                                       out_grad, dsc_conv, kAlgo, global.get_workspace(),
-                                       global.get_workspace_size(), &beta, dsc_filter,
-                                       filter_grad);
+        auto st = cudnnConvolutionBackwardFilter(
+            global.cudnn_handle(), &alpha, dsc_in, in, dsc_out, out_grad, dsc_conv, kAlgo,
+            global.get_workspace(), global.get_workspace_size(), &beta, dsc_filter,
+            filter_grad);
+        check(st);
     }
     size_t workspace_bwd_filter() {
-        auto kAlgo = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
+        auto kAlgo = algo_.bwd_filter;
         size_t workspace_size;
-        auto status = cudnnGetConvolutionBackwardFilterWorkspaceSize(
+        auto st = cudnnGetConvolutionBackwardFilterWorkspaceSize(
             global.cudnn_handle(), dsc_in, dsc_out, dsc_conv, dsc_filter, kAlgo,
             &workspace_size);
-        assert(status == CUDNN_STATUS_SUCCESS);
+        // assert(status == CUDNN_STATUS_SUCCESS);
+        check(st);
         return workspace_size;
     }
 
@@ -108,20 +113,10 @@ class ConvolutionFunctor {
     }
     dim_t calc_dims_out() {
         int n, c, h, w;
-        auto status = cudnnGetConvolution2dForwardOutputDim(dsc_conv, dsc_in, dsc_filter, &n, &c, &h,
-                                              &w);
-        
-        // dim_t output(4);
-        // // B
-        // output[0] = dims_in[0];
-        // // Co
-        // output[1] = dims_filter[1];
-        // auto gen_len = [=](int len, int kernel) {
+        auto status = cudnnGetConvolution2dForwardOutputDim(dsc_conv, dsc_in, dsc_filter,
+                                                            &n, &c, &h, &w);
         //     return (len - kernel + 2 * padding) / stride + 1;
-        // };
-        // // H, W
-        // output[2] = gen_len(dims_in[2], dims_filter[2]);
-        // output[3] = gen_len(dims_in[3], dims_filter[3]);
+        check(status);
         return dim_t{n, c, h, w};
     }
 
@@ -131,4 +126,9 @@ class ConvolutionFunctor {
     TensorDescriptor dsc_in;
     TensorDescriptor dsc_out;
     FilterDescriptor dsc_filter;
+    struct {
+        cudnnConvolutionFwdAlgo_t fwd = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED;
+        cudnnConvolutionBwdDataAlgo_t bwd_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
+        cudnnConvolutionBwdFilterAlgo_t bwd_filter = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED;
+    } algo_;
 };
