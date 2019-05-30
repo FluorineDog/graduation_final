@@ -132,10 +132,10 @@ class ConvolutionFunctor {
     TensorDescriptor dsc_out;
     FilterDescriptor dsc_filter;
     struct {
-        cudnnConvolutionFwdAlgo_t fwd = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED;
+        cudnnConvolutionFwdAlgo_t fwd = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD;
         cudnnConvolutionBwdDataAlgo_t bwd_data =
-            CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
+            CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD;
         cudnnConvolutionBwdFilterAlgo_t bwd_filter =
-            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED;
+            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD;
     } algo_;
 };
