@@ -109,7 +109,7 @@ class ForwardVisitor : public Visitor {
         input_ = input;
     }
     virtual void visit(BatchNormNode& n) override {
-        assert(false);
+        // assert(false);
         auto& mm = eng.get_mm();
         auto& opt = eng.get_opt();
         auto weight = opt.get_weight(n.out_id);

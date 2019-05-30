@@ -39,6 +39,12 @@ class TensorDescriptor {
     ~TensorDescriptor() {
         cudnnDestroyTensorDescriptor(desc_);
     }
+    void recover(){
+        size_t size;
+        cudnnGetTensorSizeInBytes(desc_, &size);
+        assert(size < (1ULL <<31));
+        dims_ = dim_t{1, (int)size};
+    }
 
     void init(dim_t dims) {
         dims_ = dims;
@@ -46,7 +52,7 @@ class TensorDescriptor {
             dims_.resize(4, 1);
         }
         auto strides = get_strides(dims_);
-        auto status =cudnnSetTensorNdDescriptor(desc_, kDataType, 4, dims_, strides);
+        auto status = cudnnSetTensorNdDescriptor(desc_, kDataType, dims_.size(), dims_, strides);
         assert(status == CUDNN_STATUS_SUCCESS);
     }
 

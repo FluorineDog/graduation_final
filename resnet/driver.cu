@@ -19,7 +19,8 @@ int main() {
                                          /*stride*/ 2, /*dilation*/ 1);
     hw = 14;
     c = 32;
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    // x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<BatchNormNode>(x, dim_t{B, c, hw, hw});
     x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 32,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
                                          /*stride*/ 2, /*dilation*/ 1);
@@ -45,26 +46,6 @@ int main() {
     host_vector<float> data_raw = get_data();
     host_vector<int> labels_raw = get_labels();
 
-    // auto total = B;
-    // host_vector<float> data_raw;
-    // host_vector<int> labels_raw;
-    // data_raw.resize(B * 1000);
-    // std::default_random_engine e(2);
-    // for(auto& x : data_raw) {
-    //     x = (float)(e() % 10001) / 5000 - 1;
-    // }
-    // for(auto id : Range(B)) {
-    //     float sum = 0;
-    //     for(auto x : Range(features)) {
-    //         sum += data_raw[id * features + x];
-    //     }
-    //     int label = sum >= 0 ? 1 : 0;
-    //     labels_raw.push_back(label);
-    // }
-
-    // for(auto x: labels_raw){
-    //     cout << x;
-    // }
     cout << endl;
 
     DeviceVector<T> losses(B);
@@ -74,6 +55,13 @@ int main() {
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
+
+        if(offset_lb != 0) {
+            global.set_training(true);
+        } else {
+            global.set_training(false);
+        }
+
         auto data_beg = data_raw.data() + offset_dt;
         auto data_end = data_raw.data() + offset_dt + B * features;
         auto labels_beg = labels_raw.data() + offset_lb;

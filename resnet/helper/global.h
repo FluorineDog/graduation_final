@@ -33,8 +33,14 @@ class Global {
     size_t get_workspace_size() {
         return workspace_.size() * sizeof(float);
     }
-
+    bool is_training(){
+        return training_;
+    }
+    void set_training(bool training){
+        this->training_ = training; 
+    }
   private:
+    bool training_ = true;
     device_vector<float> workspace_;
     cudnnHandle_t cudnn_handle_;
     cublasHandle_t blas_handle_;
