@@ -13,6 +13,11 @@ class ConvolutionFunctor {
           params_{group, padding, stride, dilation} {
         dim_t dims_out = calc_dims_out();
         dsc_out.init(dims_out);
+        if(stride != 1 || K != 3) {
+            algo_.fwd = CUDNN_CONVOLUTION_FWD_ALGO_GEMM;
+            algo_.bwd_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_0;
+            algo_.bwd_filter = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_0;
+        }
     }
     void forward(float* out, const float* in, const float* filter) {
         float alpha = 1, beta = 0;
@@ -47,8 +52,8 @@ class ConvolutionFunctor {
     }
 
     size_t get_workspace_size() {
-        auto k =  std::max(workspace_bwd_data(),
-                        std::max(workspace_bwd_filter(), workspace_fwd()));
+        auto k = std::max(workspace_bwd_data(),
+                          std::max(workspace_bwd_filter(), workspace_fwd()));
         return k;
     }
 
@@ -128,7 +133,9 @@ class ConvolutionFunctor {
     FilterDescriptor dsc_filter;
     struct {
         cudnnConvolutionFwdAlgo_t fwd = CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED;
-        cudnnConvolutionBwdDataAlgo_t bwd_data = CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
-        cudnnConvolutionBwdFilterAlgo_t bwd_filter = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED;
+        cudnnConvolutionBwdDataAlgo_t bwd_data =
+            CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD_NONFUSED;
+        cudnnConvolutionBwdFilterAlgo_t bwd_filter =
+            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED;
     } algo_;
 };

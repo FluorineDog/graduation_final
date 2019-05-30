@@ -12,22 +12,32 @@ int main() {
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
-
-    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, 1, 28, 28}, /*C_out*/ 32,
+    auto hw = 28;
+    auto c = 1;
+    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 32,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
-                                         /*stride*/ 1, /*dilation*/ 1);
-
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, 32 * 28 * 28});
-    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, 32, 28, 28}, /*C_out*/ 6,
+                                         /*stride*/ 2, /*dilation*/ 1);
+    hw = 14;
+    c = 32;
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 32,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
-                                         /*stride*/ 1, /*dilation*/ 1);
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, 6 * 28 * 28});
+                                         /*stride*/ 2, /*dilation*/ 1);
+    c = 32;
+    hw = 7;
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 256,
+                                         /*kernel*/ 7, /*group*/ 1, /*padding*/ 0,
+                                         /*stride*/ 2, /*dilation*/ 1);
+    c = 256;
+    hw = 1;
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
     // x = eng.insert_node<FCNode>(x, B, 3 * 28 * 28, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
     // x = eng.insert_node<FCNode>(x, B, hidden, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
 
-    x = eng.insert_node<FCNode>(x, B, 6 * 28 * 28, classes);
+    x = eng.insert_node<FCNode>(x, B, c * hw * hw, classes);
     eng.dest_node = x;
     eng.finish_off();
 
