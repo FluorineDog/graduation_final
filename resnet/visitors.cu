@@ -1,4 +1,5 @@
 #include "visitors.h"
+#include "computational_graph.h"
 void MetaVisitor::visit(FCNode& n) {
     weight_sz = n.functor.size_parameters();
     map_dim = n.functor.out_dim();

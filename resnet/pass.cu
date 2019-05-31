@@ -1,4 +1,5 @@
 #include "visitors.h"
+#include "computational_graph.h"
 
 void Engine::prepare_feature_maps() {
     MetaVisitor meta;

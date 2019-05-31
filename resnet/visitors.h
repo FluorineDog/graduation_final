@@ -1,7 +1,7 @@
 #pragma once
 
-#include "computational_graph.h"
 #include "helper/defs.h"
+class Engine;
 
 class MetaVisitor : public Visitor {
   public:
@@ -11,7 +11,6 @@ class MetaVisitor : public Visitor {
     virtual void visit(AddNode& n) override;
     virtual void visit(BatchNormNode& n) override;
     virtual void visit(PoolingNode& n) override;
-
     virtual void visit(ConvolutionNode& n) override;
 
     struct Meta {
@@ -38,7 +37,7 @@ class MetaVisitor : public Visitor {
         node.accept(*this);
         return workspace;
     }
-    
+
   private:
     dim_t map_dim;
     size_t weight_sz;
@@ -50,18 +49,14 @@ class ForwardVisitor : public Visitor {
     ForwardVisitor(Engine& eng) : eng(eng), input_(nullptr) {}
     virtual void visit(FCNode& n) override;
     virtual void visit(ActivationNode& n) override;
-
     virtual void visit(PlaceHolderNode& n) override;
-
     virtual void visit(AddNode& n) override;
+    virtual void visit(BatchNormNode& n) override;
+    virtual void visit(ConvolutionNode& n) override;
+    virtual void visit(PoolingNode& n) override;
     void set(float* input) {
         input_ = input;
     }
-    virtual void visit(BatchNormNode& n) override;
-
-    virtual void visit(ConvolutionNode& n) override;
-
-    virtual void visit(PoolingNode& n) override;
 
   private:
     float* input_;
@@ -83,17 +78,11 @@ class BackwardVisitor : public Visitor {
   public:
     BackwardVisitor(Engine& eng) : eng(eng) {}
     virtual void visit(FCNode& n) override;
-
     virtual void visit(ActivationNode& n) override;
-
     virtual void visit(PlaceHolderNode& n) override;
     virtual void visit(AddNode& n) override;
-
     virtual void visit(BatchNormNode& n) override;
-
     virtual void visit(ConvolutionNode& n) override;
-
     virtual void visit(PoolingNode& n) override;
-
     Engine& eng;
 };

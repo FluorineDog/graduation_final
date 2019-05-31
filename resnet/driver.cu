@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "computational_graph.h"
 #include "resnet.h"
 
 Global global;
