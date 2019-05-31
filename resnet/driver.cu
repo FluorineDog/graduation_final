@@ -21,21 +21,21 @@ int main() {
     hw = 14;
     c = 32;
     x = eng.insert_node<BatchNormNode>(x, dim_t{B, c, hw, hw});
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, c, hw, hw});
     x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 32,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
                                          /*stride*/ 2, /*dilation*/ 1);
     c = 32;
     hw = 7;
     x = eng.insert_node<BatchNormNode>(x, dim_t{B, c, hw, hw});
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, c, hw, hw});
     x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 256,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
                                          /*stride*/ 2, /*dilation*/ 1);
     c = 256;
     hw = 4;
     x = eng.insert_node<BatchNormNode>(x, dim_t{B, c, hw, hw});
-    x = eng.insert_node<ActivationNode>(x, dim_t{B, c * hw * hw});
+    x = eng.insert_node<ActivationNode>(x, dim_t{B, c, hw, hw});
     x = eng.insert_node<PoolingNode>(x, dim_t{B, c, hw, hw}, /*kernel*/2, /*padding*/0, /*stride*/2); 
     // x = eng.insert_node<FCNode>(x, B, 3 * 28 * 28, hidden);
     // x = eng.insert_node<ActivationNode>(x, dim_t{B, hidden});
