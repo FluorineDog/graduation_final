@@ -5,6 +5,7 @@
 #include "../doglib/graph/procedure.h"
 #include <random>
 #include "optimizer.h"
+#include "visitors.h"
 //  stupid version
 //  definition:
 //    accept correct
@@ -39,6 +40,8 @@ class MemoryManager {
     std::map<int, DeviceVector<float>> mapping;
 };
 
+void check_dims(NodeBase& node, dim_t expected_dims);
+
 // graph executor, in one place
 class Engine {
   public:
@@ -66,19 +69,27 @@ class Engine {
     }
 
     template <class T, class... Arg>
-    int insert_node(int parent, Arg... args) {
+    int insert_node(int parent, dim_t in_dims, Arg... args) {
+        // MetaVisitor meta;
+        // auto ref_dims = meta.out_dim(in_dims);
+        // assert(ref_dims.size() == in_dims.size());
+        // for(auto i: Range(ref_dims.size())){
+        //     assert(ref_dims[i] == in_dims[i]);
+        // }
+        // check_dims(*nodes[parent], in_dims);
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(parent, id);
-        nodes.emplace(id, std::make_unique<T>(parent, id, args...));
+        
+        nodes.emplace(id, std::make_unique<T>(parent, id, in_dims, args...));
         return id;
     }
 
     template <class T, class... Arg>
-    int insert_blend(int a, int b, Arg... args) {
+    int insert_blend(int a, int b, dim_t in_dims, Arg... args) {
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(a, id);
         forward_graph.add_edge(b, id);
-        nodes.emplace(id, std::make_unique<T>(a, b, id, args...));
+        nodes.emplace(id, std::make_unique<T>(a, b, id, in_dims, args...));
         return id;
     }
 
