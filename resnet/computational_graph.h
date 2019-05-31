@@ -67,13 +67,10 @@ class Engine {
     }
 
     template <class T, class... Arg>
-    int insert_node(int parent, dim_t in_dims, Arg... args) {
+    int insert_node(int parent, Arg... args) {
         MetaVisitor meta;
-        auto ref_dims = meta.out_dim(*nodes[parent]);
-        assert(ref_dims.size() == in_dims.size());
-        for(auto i: Range(ref_dims.size())){
-            assert(ref_dims[i] == in_dims[i]);
-        }
+        auto in_dims = meta.out_dim(*nodes[parent]);
+
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(parent, id);
         
@@ -82,11 +79,19 @@ class Engine {
     }
 
     template <class T, class... Arg>
-    int insert_blend(int a, int b, dim_t in_dims, Arg... args) {
+    int insert_blend(int a, int b, Arg... args) {
+        MetaVisitor meta;
+        auto a_dims = meta.out_dim(*nodes[a]);
+        auto b_dims = meta.out_dim(*nodes[b]);
+        assert(a_dims.size() == b_dims.size());
+        for(auto i: Range(a_dims.size())){
+            assert(a_dims[i] == b_dims[i]);
+        }
+
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(a, id);
         forward_graph.add_edge(b, id);
-        nodes.emplace(id, std::make_unique<T>(a, b, id, in_dims, args...));
+        nodes.emplace(id, std::make_unique<T>(a, b, id, a_dims, args...));
         return id;
     }
 
