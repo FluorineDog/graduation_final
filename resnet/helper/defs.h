@@ -27,8 +27,10 @@ class Visitor {
 
 // start from here
 struct FCNode : NodeBase {
-    FCNode(int in_id, int out_id, int batch, int in_size, int out_size)
-        : in_id(in_id), out_id(out_id), functor(batch, in_size, out_size) {}
+    FCNode(int in_id, int out_id, dim_t in, int out_size)
+        : in_id(in_id),
+          out_id(out_id),
+          functor(in[0], get_volume(in) / in[0], out_size) {}
     int in_id;
     int out_id;
     FCFunctor functor;
@@ -94,8 +96,9 @@ struct PoolingNode : NodeBase {
 };
 
 struct ConvolutionNode : NodeBase {
-    ConvolutionNode(int in_id, int out_id, dim_t dims_in, int C_out, int K, int group,
-                    int padding, int stride, int dilation = 1)
+    ConvolutionNode(
+        int in_id, int out_id, dim_t dims_in, int C_out, int K, int group, int padding,
+        int stride, int dilation = 1)
         : in_id(in_id),
           out_id(out_id),
           functor(dims_in, C_out, K, group, padding, stride, dilation) {}

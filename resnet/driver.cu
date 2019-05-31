@@ -44,7 +44,7 @@ int main() {
 
     c = 256;
     hw = 2;
-    x = eng.insert_node<FCNode>(x, B, c * hw * hw, classes);
+    x = eng.insert_node<FCNode>(x, dim_t{B, c, hw, hw},  classes);
     eng.dest_node = x;
     eng.finish_off();
 
