@@ -9,12 +9,13 @@ int main() {
     int features = 28 * 28;
     int hidden = 1000;
     int classes = 10;
-    dim_t input_dim = {B, features};
+    dim_t input_dim = {B, 1, 28, 28};
 
-    auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
-    eng.src_node = x;
     auto hw = 28;
     auto c = 1;
+
+    auto x = eng.insert_leaf<PlaceHolderNode>(dim_t{B, c, hw, hw});
+    eng.src_node = x;
     x = eng.insert_node<ConvolutionNode>(x, dim_t{B, c, hw, hw}, /*C_out*/ 32,
                                          /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
                                          /*stride*/ 2, /*dilation*/ 1);
