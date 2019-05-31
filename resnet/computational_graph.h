@@ -40,8 +40,6 @@ class MemoryManager {
     std::map<int, DeviceVector<float>> mapping;
 };
 
-void check_dims(NodeBase& node, dim_t expected_dims);
-
 // graph executor, in one place
 class Engine {
   public:
@@ -70,13 +68,12 @@ class Engine {
 
     template <class T, class... Arg>
     int insert_node(int parent, dim_t in_dims, Arg... args) {
-        // MetaVisitor meta;
-        // auto ref_dims = meta.out_dim(in_dims);
-        // assert(ref_dims.size() == in_dims.size());
-        // for(auto i: Range(ref_dims.size())){
-        //     assert(ref_dims[i] == in_dims[i]);
-        // }
-        // check_dims(*nodes[parent], in_dims);
+        MetaVisitor meta;
+        auto ref_dims = meta.out_dim(*nodes[parent]);
+        assert(ref_dims.size() == in_dims.size());
+        for(auto i: Range(ref_dims.size())){
+            assert(ref_dims[i] == in_dims[i]);
+        }
         auto id = forward_graph.new_vertex();
         forward_graph.add_edge(parent, id);
         
