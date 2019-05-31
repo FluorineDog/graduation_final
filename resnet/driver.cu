@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "resnet.h"
 
 Global global;
 int main() {
@@ -83,13 +84,9 @@ int main() {
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
         if(offset_lb) {
-            // eng.get_mm().l2_backward(losses, B, 0.1);
             ce.backward(act_grad, act, losses, dev_labels.data().get());
-            // dog_print("SS", act_grad, dim_t{B, classes});
-            // dog_print("hhd", act, {B});
             eng.backward_pass(act_grad);
         }
-        // auto correct = thrust::count_if(losses.begin(), losses.end(), functor());
         auto correct = get_acc(act, labels_beg, B, classes);
         if(loss != loss) {
             break;
@@ -97,7 +94,6 @@ int main() {
         if(offset_lb) {
             static float lr = 0.0002 / B;
             eng.get_opt().step(lr);
-            // lr *= 0.99995;
             cout << loss / B << " " << correct << endl;
         } else {
             cout << "test: " << loss / B << " " << correct << endl;
