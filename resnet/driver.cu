@@ -29,7 +29,7 @@ int main() {
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
     doglib::time::TimerAdvanced timer([] { cudaDeviceSynchronize(); });
-    for(auto x : Range(100000)) {
+    for(auto x : Range(300)) {
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
