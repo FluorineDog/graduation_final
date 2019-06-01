@@ -86,7 +86,7 @@ int construct_resnet(Engine& eng, int x_, std::vector<int> blocks, int classes) 
         x, /*C_out*/ init_planes,
         /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
         /*stride*/ 1, /*dilation*/ 1);
-    x = eng.insert_node<BatchNorm>(x);
+    x = eng.insert_node<BatchNormNode>(x);
     x = eng.insert_node<ActivationNode>(x);
     int in_planes = 64;
     std::tie(x, in_planes) = make_layer(eng, x, in_planes, 64, blocks[0], 1);
