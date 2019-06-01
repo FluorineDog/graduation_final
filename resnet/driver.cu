@@ -8,38 +8,12 @@ int main() {
     // define network structure
     int B = 200;
     int features = 28 * 28;
-    int hidden = 1000;
     int classes = 10;
     dim_t input_dim = {B, 1, 28, 28};
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
-    x = eng.insert_node<ConvolutionNode>(
-        x, /*C_out*/ 32,
-        /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
-        /*stride*/ 2, /*dilation*/ 1);
-    x = eng.insert_node<BatchNormNode>(x);
-    x = eng.insert_node<ActivationNode>(x);
-    x = eng.insert_node<ConvolutionNode>(
-        x, /*C_out*/ 32,
-        /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
-        /*stride*/ 2, /*dilation*/ 1);
-    x = eng.insert_node<BatchNormNode>(x);
-    x = eng.insert_node<ActivationNode>(x);
-    x = eng.insert_node<ConvolutionNode>(
-        x, /*C_out*/ 256,
-        /*kernel*/ 3, /*group*/ 1, /*padding*/ 1,
-        /*stride*/ 2, /*dilation*/ 1);
-    x = eng.insert_node<BatchNormNode>(x);
-    x = eng.insert_node<ActivationNode>(x);
-    x = eng.insert_node<PoolingNode>(x, /*kernel*/ 2, /*padding*/ 0, /*stride*/ 2);
-
-    // x = eng.insert_node<FCNode>(x, hidden);
-    // x = eng.insert_node<ActivationNode>(x);
-    // x = eng.insert_node<FCNode>(x, hidden);
-    // x = eng.insert_node<ActivationNode>(x);
-
-    x = eng.insert_node<FCNode>(x, classes);
+    x = naive_net(eng, x, classes);
     eng.dest_node = x;
     eng.finish_off();
 
