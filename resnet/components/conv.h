@@ -138,6 +138,6 @@ class ConvolutionFunctor {
         cudnnConvolutionBwdDataAlgo_t bwd_data =
             CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD;
         cudnnConvolutionBwdFilterAlgo_t bwd_filter =
-            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED;
+            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD;
     } algo_;
 };
