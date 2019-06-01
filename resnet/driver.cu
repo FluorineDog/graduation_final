@@ -7,10 +7,11 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 200;
-    int features = 28 * 28;
+    int B = 150;
+    int pixel = 32;
+    int features = pixel * pixel;
     int classes = 10;
-    dim_t input_dim = {B, 1, 28, 28};
+    dim_t input_dim = {B, 3, pixel, pixel};
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;

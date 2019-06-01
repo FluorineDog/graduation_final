@@ -23,10 +23,15 @@ class MemoryManager {
         return mapping[id];
     }
     void zero_grad() {
+        #pragma omp parallel for
         for(auto& pr : mapping) {
+            if(pr.first > 0){
+                break;
+            }
             auto& vec = pr.second;
             auto ptr = vec.data().get();
             thrust::fill(thrust::device, vec.begin(), vec.end(), 0);
+            // cudaMemset(vec.data().get(), 0, sizeof(float) * vec.size());
             // assert(inspect(ptr) == 0);
         }
     }
