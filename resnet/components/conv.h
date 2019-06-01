@@ -52,9 +52,11 @@ class ConvolutionFunctor {
     }
 
     size_t get_workspace_size() {
-        auto k = std::max(workspace_bwd_data(),
-                          std::max(workspace_bwd_filter(), workspace_fwd()));
-        return k;
+        auto k0 = workspace_fwd();
+        auto k1 = workspace_bwd_data();
+        auto k2 = workspace_bwd_filter();
+        
+        return std::max(std::max(k0, k1), k2);
     }
 
   private:
@@ -136,6 +138,6 @@ class ConvolutionFunctor {
         cudnnConvolutionBwdDataAlgo_t bwd_data =
             CUDNN_CONVOLUTION_BWD_DATA_ALGO_WINOGRAD;
         cudnnConvolutionBwdFilterAlgo_t bwd_filter =
-            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD;
+            CUDNN_CONVOLUTION_BWD_FILTER_ALGO_WINOGRAD_NONFUSED;
     } algo_;
 };

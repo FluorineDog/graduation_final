@@ -1,3 +1,4 @@
+#include "../doglib/time/timer.h"
 #include "stdafx.h"
 #include "computational_graph.h"
 #include "resnet.h"
@@ -13,7 +14,8 @@ int main() {
 
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
-    x = naive_net(eng, x, classes);
+    // x = construct_resnet(eng, x, {1, 1, 1, 1}, classes);
+    x = resnet50(eng, x, classes);
     eng.dest_node = x;
     eng.finish_off();
 
@@ -26,6 +28,7 @@ int main() {
     DeviceVector<T> losses(B);
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
+    doglib::time::TimerAdvanced timer([] { cudaDeviceSynchronize(); });
     for(auto x : Range(100000)) {
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
@@ -63,9 +66,11 @@ int main() {
         if(offset_lb) {
             static float lr = 0.0002 / B;
             eng.get_opt().step(lr);
-            cout << loss / B << " " << correct << endl;
+            auto t = timer.get_step_seconds();
+            cout << loss / B << " " << correct << " " << t << endl;
         } else {
-            cout << "test: " << loss / B << " " << correct << endl;
+            auto t = timer.get_step_seconds();
+            cout << "test: " << loss / B << " " << correct << " " << t << endl;
         }
     }
 }

@@ -97,3 +97,16 @@ int construct_resnet(Engine& eng, int x_, std::vector<int> blocks, int classes) 
     x = eng.insert_node<FCNode>(x, classes);
     return x;
 }
+
+int resnet50(Engine& eng, int x_, int classes) {
+    return construct_resnet(eng, x_, {3, 4, 6, 3}, classes);
+}
+
+int resnet101(Engine& eng, int x_, int classes) {
+    return construct_resnet(eng, x_, {3, 4, 23, 3}, classes);
+}
+
+int resnet152(Engine& eng, int x_, int classes) {
+    return construct_resnet(eng, x_, {3, 8, 36, 3}, classes);
+}
+
