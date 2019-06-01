@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-int naive_net(Engine& eng, int x_, int classes) {
+inline int naive_net(Engine& eng, int x_, int classes) {
     auto x = x_;
     x = eng.insert_node<ConvolutionNode>(
         x, /*C_out*/ 32,
@@ -31,7 +31,7 @@ int naive_net(Engine& eng, int x_, int classes) {
     return x;
 }
 
-int create_bottleneck(Engine& eng, int x_, int in_planes, int planes, int stride) {
+inline int create_bottleneck(Engine& eng, int x_, int in_planes, int planes, int stride) {
     auto x = x_;
     x = eng.insert_node<ConvolutionNode>(
         x, /*C_out*/ planes,
@@ -64,7 +64,7 @@ int create_bottleneck(Engine& eng, int x_, int in_planes, int planes, int stride
     return x;
 }
 
-std::pair<int, int> make_layer(
+inline std::pair<int, int> make_layer(
     Engine& eng, int x_, int in_planes_,    //
     int planes, int n_blocks, int stride_) {
     auto x = x_;
@@ -78,7 +78,7 @@ std::pair<int, int> make_layer(
     return std::make_pair(x, in_planes);
 }
 
-int construct_resnet(Engine& eng, int x_, std::vector<int> blocks, int classes) {
+inline int construct_resnet(Engine& eng, int x_, std::vector<int> blocks, int classes) {
     assert(blocks.size() == 4);
     auto x = x_;
     auto init_planes = 64;
@@ -98,15 +98,15 @@ int construct_resnet(Engine& eng, int x_, std::vector<int> blocks, int classes) 
     return x;
 }
 
-int resnet50(Engine& eng, int x_, int classes) {
+inline int resnet50(Engine& eng, int x_, int classes) {
     return construct_resnet(eng, x_, {3, 4, 6, 3}, classes);
 }
 
-int resnet101(Engine& eng, int x_, int classes) {
+inline int resnet101(Engine& eng, int x_, int classes) {
     return construct_resnet(eng, x_, {3, 4, 23, 3}, classes);
 }
 
-int resnet152(Engine& eng, int x_, int classes) {
+inline int resnet152(Engine& eng, int x_, int classes) {
     return construct_resnet(eng, x_, {3, 8, 36, 3}, classes);
 }
 
