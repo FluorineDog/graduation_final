@@ -30,6 +30,7 @@ int main() {
     global.update_workspace_size(ce.workspace());
     doglib::time::TimerAdvanced timer([] { cudaDeviceSynchronize(); });
     for(auto x : Range(300)) {
+        timer.reset();
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
@@ -44,8 +45,11 @@ int main() {
         auto data_end = data_raw.data() + offset_dt + B * features;
         auto labels_beg = labels_raw.data() + offset_lb;
         auto labels_end = labels_raw.data() + offset_lb + B;
+        auto init_tm = timer.get_step_seconds();
         eng.zero_grad();
+        auto zero_tm = timer.get_step_seconds();
         eng.forward_pass(data_beg);
+        auto fwd_tm = timer.get_step_seconds();
         auto act = eng.get_ptr(eng.dest_node);
         auto act_grad = eng.get_ptr(~eng.dest_node);
         device_vector<int> dev_labels(labels_beg, labels_end);
@@ -55,22 +59,36 @@ int main() {
         // dog_print("??", losses, dim_t{B});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
+        double ck_tm = 0;
         if(offset_lb) {
             ce.backward(act_grad, act, losses, dev_labels.data().get());
+            ck_tm = timer.get_step_seconds();
             eng.backward_pass(act_grad);
         }
+        auto back_tm = timer.get_step_seconds();
         auto correct = get_acc(act, labels_beg, B, classes);
+        auto acc_tm = timer.get_step_seconds();
         if(loss != loss) {
             break;
         }
         if(offset_lb) {
             static float lr = 0.0002 / B;
             eng.get_opt().step(lr);
-            auto t = timer.get_step_seconds();
-            cout << loss / B << " " << correct << " " << t << endl;
+            auto all_tm = timer.get_overall_seconds();
+            // cout << loss / B << " " << correct << " " << t << endl;
+            cout 
+            << "init_tm" << " " << init_tm << " "
+            << "zero_tm" << " " << zero_tm << " "
+            << "fwd_tm" << " " << fwd_tm << " "
+            << "cross_tm" << " " << ck_tm << " "
+            << "bak_tm" << " " << back_tm << " "
+            << "acc_tm" << " " << acc_tm << " "
+            << "all_tm" << " " << all_tm << " "//
+            ;
         } else {
             auto t = timer.get_step_seconds();
             cout << "test: " << loss / B << " " << correct << " " << t << endl;
         }
+        cout << endl;
     }
 }
