@@ -1,4 +1,5 @@
 #pragma once
+#define CUDA_API_PER_THREAD_DEFAULT_STREAM
 #include <cudnn.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>

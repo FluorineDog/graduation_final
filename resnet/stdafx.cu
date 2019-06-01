@@ -1,4 +1,5 @@
 #include "helper/common.h"
+#include "../doglib/time/timer.h"
 #include <fstream>
 #include <arpa/inet.h>
 #include <thrust/device_vector.h>
@@ -7,13 +8,13 @@ using std::vector;
 // const char* labels_file = "/home/guilin/workspace/data/mnist/labels-idx1-ubyte";
 
 const char* data_file = "/home/guilin/workspace/data/cifar10/data.bin";
-const char* labels_file = "/home/guilin/workspace/data/mnist/labels.bin";
+const char* labels_file = "/home/guilin/workspace/data/cifar10/labels.bin";
 
 host_vector<float> get_data() {
     host_vector<float> data;
     std::ifstream fin(data_file, std::ios::binary);
     // uint32_t magic;
-    uint32_t number = 60000, w = 32, h = 32;
+    size_t number = 60000, w = 32, h = 32;
     // fin.read((char*)&magic, 4);
     // fin.read((char*)&number, 4);
     // fin.read((char*)&w, 4);
@@ -27,10 +28,13 @@ host_vector<float> get_data() {
     assert(h == 32);
     assert(w == 32);
     number = 60000;
+    doglib::time::Timer timer;
     auto sz = number * w * h * 3;
     data.resize(sz);
     vector<uint8_t> buffer(sz);
+    cout << "init data buffer " << timer.get_step_seconds() << endl;
     fin.read((char*)buffer.data(), sz);
+    cout << "read data buffer " << timer.get_step_seconds() << endl;
     #pragma omp parallel for
     for(size_t i = 0; i < sz; ++i) {
         auto id = i;
@@ -38,6 +42,7 @@ host_vector<float> get_data() {
         assert(0 <= x && x < 256);
         data[id] = x / 255.0;
     }
+    cout << "process data buffer " << timer.get_step_seconds() << endl;
     return data;
 }
 host_vector<int> get_labels() {

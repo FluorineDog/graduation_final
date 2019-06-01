@@ -1,3 +1,4 @@
+#include "helper/common.h"
 #include "visitors.h"
 #include "computational_graph.h"
 

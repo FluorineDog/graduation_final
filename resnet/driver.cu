@@ -1,3 +1,4 @@
+#include "helper/common.h"
 #include "../doglib/time/timer.h"
 #include "stdafx.h"
 #include "computational_graph.h"
@@ -9,7 +10,7 @@ int main() {
     // define network structure
     int B = 150;
     int pixel = 32;
-    int features = pixel * pixel;
+    int features = 3 * pixel * pixel;
     int classes = 10;
     dim_t input_dim = {B, 3, pixel, pixel};
 
@@ -76,16 +77,22 @@ int main() {
             static float lr = 0.0002 / B;
             eng.get_opt().step(lr);
             auto all_tm = timer.get_overall_seconds();
-            // cout << loss / B << " " << correct << " " << t << endl;
-            cout 
-            << "init_tm" << " " << init_tm << " "
-            << "zero_tm" << " " << zero_tm << " "
-            << "fwd_tm" << " " << fwd_tm << " "
-            << "cross_tm" << " " << ck_tm << " "
-            << "bak_tm" << " " << back_tm << " "
-            << "acc_tm" << " " << acc_tm << " "
-            << "all_tm" << " " << all_tm << " "//
-            ;
+            cout << loss / B << " " << correct << " " << endl;
+            cout << "init_tm"
+                 << " " << init_tm << " "
+                 << "zero_tm"
+                 << " " << zero_tm << " "
+                 << "fwd_tm"
+                 << " " << fwd_tm << " "
+                 << "cross_tm"
+                 << " " << ck_tm << " "
+                 << "bak_tm"
+                 << " " << back_tm << " "
+                 << "acc_tm"
+                 << " " << acc_tm << " "
+                 << "all_tm"
+                 << " " << all_tm << " "    //
+                ;
         } else {
             auto t = timer.get_step_seconds();
             cout << "test: " << loss / B << " " << correct << " " << t << endl;
