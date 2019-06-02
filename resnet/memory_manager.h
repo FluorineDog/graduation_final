@@ -43,6 +43,9 @@ class GradientManager {
 
 class FeatureManager {
   public:
+    FeatureManager(class Engine& eng) : eng(eng) {}
+    void init();
+
     void register_feature_map(int node_id, size_t size) {
         assert(!feature_mapping.count(node_id));
         feature_mapping[node_id].resize(size);
@@ -56,13 +59,18 @@ class FeatureManager {
     void terminate() {}
 
   private:
+    class Engine& eng;
     std::map<int, DeviceVector<float>> feature_mapping;
+    
 };
 
 class MemoryManager : public FeatureManager, public GradientManager {
   public:
+    MemoryManager(class Engine& eng): FeatureManager(eng){}
     void terminate() {
         FeatureManager::terminate();
         GradientManager::terminate();
     }
 };
+
+

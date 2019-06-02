@@ -11,10 +11,10 @@
 // graph executor, in one place
 class Engine {
   public:
-    Engine() : forward_graph(0), backward_graph(0) {
+    Engine() : forward_graph(0), backward_graph(0), mm(*this) {
         // src_node and dest_node is here waiting
     }
-
+    friend class FeatureManager;
     void prepare_feature_maps();
     void prepare_workspace();
     void prepare_gradient_maps();    // (todo)
