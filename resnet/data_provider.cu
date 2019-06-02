@@ -7,8 +7,8 @@ using std::vector;
 // const char* data_file = "/home/guilin/workspace/data/mnist/images-idx3-ubyte";
 // const char* labels_file = "/home/guilin/workspace/data/mnist/labels-idx1-ubyte";
 
-const char* data_file = "/home/guilin/workspace/data/cifar10/data.bin";
-const char* labels_file = "/home/guilin/workspace/data/cifar10/labels.bin";
+const char* data_file = "/home/mike/workspace/data/cifar10/data.bin";
+const char* labels_file = "/home/mike/workspace/data/cifar10/labels.bin";
 
 host_vector<float> get_data() {
     host_vector<float> data;

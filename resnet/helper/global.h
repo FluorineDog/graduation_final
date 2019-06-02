@@ -5,7 +5,8 @@
 class Global {
   public:
     Global() {
-        cudnnCreate(&cudnn_handle_);
+        auto st = cudnnCreate(&cudnn_handle_);
+        assert(st == CUDNN_STATUS_SUCCESS);
         cublasCreate_v2(&blas_handle_);
     }
     ~Global() {
