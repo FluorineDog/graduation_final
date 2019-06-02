@@ -59,7 +59,7 @@ void Engine::forward_pass(float* input) {
 void Engine::backward_pass(float* act_grad) {
     BackwardVisitor bwd(*this);
     auto dim = MetaVisitor().out_dim(*nodes[dest_node]);
-    auto top = mm.get(~dest_node);
+    auto top = mm.get_gradient(dest_node);
     cudaMemcpy(top, act_grad, get_volume(dim) * sizeof(float), cudaMemcpyDefault);
     ProcedureDFS dfs(forward_graph);
     dfs.set_visitor(Transfer::finish, [&, this](int, int id){

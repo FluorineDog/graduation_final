@@ -41,31 +41,31 @@ void MetaVisitor::visit(ConvolutionNode& n) {
 void ForwardVisitor::visit(FCNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
     auto weight = opt.get_weight(n.out_id);
     n.functor.forward(out, in, weight);
 }
 void ForwardVisitor::visit(ActivationNode& n) {
     auto& mm = eng.get_mm();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
     n.functor.forward(out, in);
 }
 
 void ForwardVisitor::visit(PlaceHolderNode& n) {
     //
     assert(n.node_id == 0);
-    auto dev_p = eng.get_mm().get(n.node_id);
+    auto dev_p = eng.get_mm().get_feature(n.node_id);
     cudaMemcpy(dev_p, input_, n.size * sizeof(T), cudaMemcpyDefault);
 }
 
 void ForwardVisitor::visit(AddNode& n) {
     // n
     auto& mm = eng.get_mm();
-    auto out = mm.get(n.out_id);
-    auto a = mm.get(n.a_id);
-    auto b = mm.get(n.b_id);
+    auto out = mm.get_feature(n.out_id);
+    auto a = mm.get_feature(n.a_id);
+    auto b = mm.get_feature(n.b_id);
     thrust::transform(thrust::device, a, a + n.size, b, out, thrust::plus<float>());
 }
 
@@ -74,8 +74,8 @@ void ForwardVisitor::visit(BatchNormNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
     auto weight = opt.get_weight(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out = mm.get(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out = mm.get_feature(n.out_id);
     n.functor.forward(out, in, weight);
 }
 
@@ -84,8 +84,8 @@ void ForwardVisitor::visit(ConvolutionNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
     auto weight = opt.get_weight(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out = mm.get(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out = mm.get_feature(n.out_id);
     n.functor.forward(out, in, weight);
 }
 
@@ -93,8 +93,8 @@ void ForwardVisitor::visit(PoolingNode& n) {
     // assert(false);
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
-    auto in = mm.get(n.in_id);
-    auto out = mm.get(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out = mm.get_feature(n.out_id);
     n.functor.forward(out, in);
 }
 
@@ -109,10 +109,10 @@ void FakeVisitor::visit(PoolingNode& n) {}
 void BackwardVisitor::visit(FCNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out_grad = mm.get(~n.out_id);
-    auto in_grad = mm.get(~n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out_grad = mm.get_gradient(n.out_id);
+    auto in_grad = mm.get_gradient(n.in_id);
 
     auto weight = opt.get_weight(n.out_id);
     auto weight_grad = opt.get_weight_grad(n.out_id);
@@ -121,10 +121,10 @@ void BackwardVisitor::visit(FCNode& n) {
 
 void BackwardVisitor::visit(ActivationNode& n) {
     auto& mm = eng.get_mm();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out_grad = mm.get(~n.out_id);
-    auto in_grad = mm.get(~n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out_grad = mm.get_gradient(n.out_id);
+    auto in_grad = mm.get_gradient(n.in_id);
     n.functor.backward(in_grad, out_grad, in, out);
 }
 
@@ -133,9 +133,9 @@ void BackwardVisitor::visit(PlaceHolderNode& n) {
 }
 void BackwardVisitor::visit(AddNode& n) {
     auto& mm = eng.get_mm();
-    auto a_g = mm.get(~n.a_id);
-    auto b_g = mm.get(~n.b_id);
-    auto out_grad = mm.get(~n.out_id);
+    auto a_g = mm.get_gradient(n.a_id);
+    auto b_g = mm.get_gradient(n.b_id);
+    auto out_grad = mm.get_gradient(n.out_id);
     thrust::transform(
         thrust::device, a_g, a_g + n.size, out_grad, a_g, thrust::plus<double>());
     thrust::transform(
@@ -145,10 +145,10 @@ void BackwardVisitor::visit(AddNode& n) {
 void BackwardVisitor::visit(BatchNormNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out_grad = mm.get(~n.out_id);
-    auto in_grad = mm.get(~n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out_grad = mm.get_gradient(n.out_id);
+    auto in_grad = mm.get_gradient(n.in_id);
     auto weight = opt.get_weight(n.out_id);
     auto weight_grad = opt.get_weight_grad(n.out_id);
     n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
@@ -157,10 +157,10 @@ void BackwardVisitor::visit(BatchNormNode& n) {
 void BackwardVisitor::visit(ConvolutionNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out_grad = mm.get(~n.out_id);
-    auto in_grad = mm.get(~n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out_grad = mm.get_gradient(n.out_id);
+    auto in_grad = mm.get_gradient(n.in_id);
     auto weight = opt.get_weight(n.out_id);
     auto weight_grad = opt.get_weight_grad(n.out_id);
     n.functor.backward(in_grad, weight_grad, in, out_grad, weight);
@@ -169,9 +169,9 @@ void BackwardVisitor::visit(ConvolutionNode& n) {
 void BackwardVisitor::visit(PoolingNode& n) {
     auto& mm = eng.get_mm();
     auto& opt = eng.get_opt();
-    auto out = mm.get(n.out_id);
-    auto in = mm.get(n.in_id);
-    auto out_grad = mm.get(~n.out_id);
-    auto in_grad = mm.get(~n.in_id);
+    auto out = mm.get_feature(n.out_id);
+    auto in = mm.get_feature(n.in_id);
+    auto out_grad = mm.get_gradient(n.out_id);
+    auto in_grad = mm.get_gradient(n.in_id);
     n.functor.backward(in_grad, in, out_grad, out);
 }

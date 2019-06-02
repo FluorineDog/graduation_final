@@ -15,19 +15,26 @@ class MemoryManager {
         //
     }
     void register_map(int id, size_t size) {
-        assert(!mapping.count(id));
-        mapping[id].resize(size);
+        assert(!feature_mapping.count(id));
+        assert(!gradient_mapping.count(id));
+        feature_mapping[id].resize(size);
+        gradient_mapping[id].resize(size);
     }
-    float* get(int id) {
-        assert(mapping.count(id));
-        return mapping[id];
+    float* get_feature(int id) {
+        assert(feature_mapping.count(id));
+        return feature_mapping[id];
+    }
+
+    float* get_gradient(int id) {
+        assert(gradient_mapping.count(id));
+        return gradient_mapping[id];
     }
     void zero_grad() {
         #pragma omp parallel for
-        for(auto& pr : mapping) {
-            if(pr.first > 0){
-                break;
-            }
+        for(auto& pr : gradient_mapping) {
+            // if(pr.first > 0){
+            //     break;
+            // }
             auto& vec = pr.second;
             auto ptr = vec.data().get();
             thrust::fill(thrust::device, vec.begin(), vec.end(), 0);
@@ -38,11 +45,13 @@ class MemoryManager {
 
     void free(int id) {}
     void terminate() {
-        mapping.clear();
+        feature_mapping.clear();
+        gradient_mapping.clear();
     }
 
   private:
-    std::map<int, DeviceVector<float>> mapping;
+    std::map<int, DeviceVector<float>> feature_mapping;
+    std::map<int, DeviceVector<float>> gradient_mapping;
 };
 
 // graph executor, in one place
@@ -55,14 +64,14 @@ class Engine {
     void prepare_feature_maps();
     void prepare_workspace();
     void prepare_gradient_maps();    // (todo)
-    void register_weight_maps();     //: better with hashtable
+    void register_weight_maps();     
 
     void finish_off() {
         backward_graph = transpose(forward_graph);
         prepare_feature_maps();
         prepare_workspace();
         prepare_gradient_maps();    // (todo)
-        register_weight_maps();     //: better with hashtable
+        register_weight_maps();    
     }
     template <class T, class... Arg>
     int insert_leaf(Arg... args) {
@@ -114,8 +123,11 @@ class Engine {
         return opt;
     }
 
-    float* get_ptr(int id) {
-        return mm.get(id);
+    auto get_dest_feature() {
+        return mm.get_feature(dest_node);
+    }
+    auto get_dest_gradient() {
+        return mm.get_gradient(dest_node);
     }
 
     int dest_node;

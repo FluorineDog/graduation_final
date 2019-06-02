@@ -52,8 +52,8 @@ int main() {
         auto zero_tm = timer.get_step_seconds();
         eng.forward_pass(data_beg);
         auto fwd_tm = timer.get_step_seconds();
-        auto act = eng.get_ptr(eng.dest_node);
-        auto act_grad = eng.get_ptr(~eng.dest_node);
+        auto act = eng.get_dest_feature();
+        auto act_grad = eng.get_dest_gradient();
         device_vector<int> dev_labels(labels_beg, labels_end);
         // dog_print("##", act, dim_t{B, classes});
         ce.forward(losses, act, dev_labels.data().get());
