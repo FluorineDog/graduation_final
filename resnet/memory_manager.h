@@ -61,7 +61,7 @@ class GradientManager {
 class FeatureManager {
   public:
     FeatureManager(class Engine& eng) : eng(eng) {}
-    void init();
+    void analyse();
 
     void register_feature_map(int node_id, size_t size) {
         sm_.register_node(node_id, size);
