@@ -14,11 +14,14 @@ class Dims : public std::vector<int> {
 template<class T>
 class DeviceVector : public thrust::device_vector<T> {
   public:
+    DeviceVector() = default;
+    DeviceVector(const DeviceVector&) = delete;
+    DeviceVector& operator=(const DeviceVector&) = delete;
     using thrust::device_vector<T>::device_vector;
     operator T*() {
         return this->data().get();
     }
-    operator T*() const {
+    operator const T*() const {
         return *this;
     }
 };
