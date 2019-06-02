@@ -2,7 +2,7 @@
 find_package(OpenMP REQUIRED)
 add_executable(driver driver.cu)
 file(GLOB headers *.h)
-add_library(cross_entropy components/cross_entropy.cu visitors.cu pass.cu)
+add_library(cross_entropy components/cross_entropy.cu visitors.cu pass.cu memory_manager.cu)
 add_library(sa data_provider.cu)
 # target_link_libraries(resnet cublas cudnn)
 # target_link_libraries(resnet cross_entropy)

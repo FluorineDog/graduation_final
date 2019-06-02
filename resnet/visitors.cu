@@ -135,7 +135,9 @@ void BackwardVisitor::visit(AddNode& n) {
     auto& mm = eng.get_mm();
     auto a_g = mm.get_gradient(n.a_id);
     auto b_g = mm.get_gradient(n.b_id);
-    auto out_grad = mm.get_gradient_final(n.out_id);
+
+    auto out_grad_ = mm.get_gradient_final(n.out_id);
+    auto out_grad = static_cast<const float*>(out_grad_); 
     thrust::transform(
         thrust::device, a_g, a_g + n.size, out_grad, a_g, thrust::plus<double>());
     thrust::transform(
