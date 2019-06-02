@@ -15,6 +15,7 @@ float* GradientManager::get_gradient(int node_id) {
     auto& ref = reference_[node_id];
     if(ref.second) {
         assert(slots_[ref.first].data().get() == ref.second);
+        assert(meta_[node_id] <= slots_[ref.first].size());
         return ref.second;
     }
     assert(ref.first == -1);
@@ -24,6 +25,7 @@ float* GradientManager::get_gradient(int node_id) {
         slots_.emplace_back(sz, 0);
         ref = std::make_pair(slot_id, slots_[slot_id].data().get());
         assert(slots_[ref.first].data().get() == ref.second);
+        assert(meta_[node_id] <= slots_[ref.first].size());
         return ref.second;
     }
     auto slot_id = free_list_.top();
@@ -38,13 +40,16 @@ float* GradientManager::get_gradient(int node_id) {
     ref = std::make_pair(slot_id, vec.data().get());
 
     assert(slots_[ref.first].data().get() == ref.second);
+    assert(meta_[node_id] <= slots_[ref.first].size());
     return ref.second;
 }
 
 GradientDataHolder GradientManager::get_gradient_final(int node_id) {
     assert(node_id >= 0);
-    auto ptr = reference_[node_id].second
+    auto ptr = reference_[node_id].second;
     assert(ptr);
+    assert(ptr == slots_[reference_[node_id].first].data().get());
+    assert(meta_[node_id] <= slots_[reference_[node_id].first].size());
     return GradientDataHolder(*this, node_id, ptr);
 }
 
