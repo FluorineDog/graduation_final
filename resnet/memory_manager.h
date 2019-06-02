@@ -3,14 +3,15 @@
 #include "helper/defs.h"
 class GradientDataHolder {
   public:
-    GradientDataHolder(class GradientManager& gm, int node_id, const float* target) : gm(gm), node_id(node_id), target(target) {}
+    GradientDataHolder(class GradientManager& gm, int node_id, const float* target)
+        : gm(gm), node_id(node_id), target(target) {}
     GradientDataHolder(const GradientDataHolder&) = delete;
     GradientDataHolder(GradientDataHolder&& that)
         : gm(that.gm), node_id(that.node_id), target(that.target) {
         that.node_id = -1;
         that.target = nullptr;
     }
-    operator const float*(){
+    operator const float*() {
         return target;
     }
     GradientDataHolder& operator=(const GradientDataHolder&) = delete;
@@ -25,13 +26,13 @@ class GradientDataHolder {
 
 class GradientManager {
   public:
-  
     void register_gradient_map(int node_id, size_t size);
     float* get_gradient(int node_id);
     GradientDataHolder get_gradient_final(int node_id);
 
     void zero_grad() {}
     void terminate() {}
+
   private:
     friend GradientDataHolder;
     std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
@@ -40,7 +41,7 @@ class GradientManager {
     std::stack<std::tuple<int, size_t, float*>> free_list_;
 };
 
-class MemoryManager : public GradientManager {
+class FeatureManager {
   public:
     void register_feature_map(int node_id, size_t size) {
         assert(!feature_mapping.count(node_id));
@@ -52,11 +53,16 @@ class MemoryManager : public GradientManager {
         return feature_mapping[node_id];
     }
 
-    void terminate() {
-        feature_mapping.clear();
-        GradientManager::terminate();
-    }
+    void terminate() {}
 
   private:
     std::map<int, DeviceVector<float>> feature_mapping;
+};
+
+class MemoryManager : public FeatureManager, public GradientManager {
+  public:
+    void terminate() {
+        FeatureManager::terminate();
+        GradientManager::terminate();
+    }
 };
