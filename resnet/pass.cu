@@ -8,7 +8,7 @@ void Engine::prepare_feature_maps() {
         auto id = std::get<0>(pr);
         auto& node = std::get<1>(pr);
         auto map_dim = meta.analyse(*node).map_dim;
-        mm.register_map(id, get_volume(map_dim));
+        mm.register_feature_map(id, get_volume(map_dim));
     }
 }
 
@@ -18,7 +18,7 @@ void Engine::prepare_gradient_maps() {
         auto id = std::get<0>(pr);
         auto& node = std::get<1>(pr);
         auto map_dim = meta.analyse(*node).map_dim;
-        mm.register_map(~id, get_volume(map_dim));
+        mm.register_gradient_map(id, get_volume(map_dim));
     }
 }
 

@@ -14,10 +14,12 @@ class MemoryManager {
     void init() {
         //
     }
-    void register_map(int id, size_t size) {
+    void register_feature_map(int id, size_t size) {
         assert(!feature_mapping.count(id));
-        assert(!gradient_mapping.count(id));
         feature_mapping[id].resize(size);
+    }
+    void register_gradient_map(int id, size_t size) {
+        assert(!gradient_mapping.count(id));
         gradient_mapping[id].resize(size);
     }
     float* get_feature(int id) {
