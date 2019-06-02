@@ -39,9 +39,6 @@ class GradientManager {
 
 class MemoryManager: public GradientManager {
   public:
-    void init() {
-        //
-    }
     void register_feature_map(int id, size_t size) {
         assert(!feature_mapping.count(id));
         feature_mapping[id].resize(size);
