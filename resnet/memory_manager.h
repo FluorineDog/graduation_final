@@ -64,20 +64,22 @@ class FeatureManager {
     void init();
 
     void register_feature_map(int node_id, size_t size) {
-        assert(!feature_mapping.count(node_id));
-        feature_mapping[node_id].resize(size);
+        sm_.register_node(node_id, size);
     }
 
     float* get_feature(int node_id) {
-        assert(feature_mapping.count(node_id));
-        return feature_mapping[node_id];
+        if(auto ptr = sm_.try_get_node(node_id)){
+            return ptr;
+        } else {
+            return sm_.prepare_new_node(node_id);
+        }
     }
 
     void terminate() {}
 
   private:
     class Engine& eng;
-    std::map<int, DeviceVector<float>> feature_mapping;
+    SmartManager sm_;
 };
 
 class MemoryManager : public FeatureManager, public GradientManager {
