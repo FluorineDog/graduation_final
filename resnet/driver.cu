@@ -8,7 +8,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 256;
+    int B = 32;
     int pixel = 32;
     int features = 3 * pixel * pixel;
     int classes = 10;
