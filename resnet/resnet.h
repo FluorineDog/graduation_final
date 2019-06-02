@@ -1,5 +1,5 @@
 #pragma once
-#include "stdafx.h"
+#include "data_provider.h"
 inline int naive_net(Engine& eng, int x_, int classes) {
     auto x = x_;
     x = eng.insert_node<ConvolutionNode>(

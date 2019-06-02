@@ -1,7 +1,7 @@
 #include "helper/common.h"
 #include "../doglib/time/timer.h"
-#include "stdafx.h"
-#include "computational_graph.h"
+#include "data_provider.h"
+#include "engine.h"
 #include "resnet.h"
 
 Global global;
