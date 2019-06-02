@@ -31,6 +31,12 @@ class MemoryManager {
         assert(gradient_mapping.count(id));
         return gradient_mapping[id];
     }
+
+    const float* get_gradient_final(int id) {
+        assert(gradient_mapping.count(id));
+        return gradient_mapping[id];
+    }
+
     void zero_grad() {
         #pragma omp parallel for
         for(auto& pr : gradient_mapping) {

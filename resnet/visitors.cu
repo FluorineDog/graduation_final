@@ -111,7 +111,7 @@ void BackwardVisitor::visit(FCNode& n) {
     auto& opt = eng.get_opt();
     auto out = mm.get_feature(n.out_id);
     auto in = mm.get_feature(n.in_id);
-    auto out_grad = mm.get_gradient(n.out_id);
+    auto out_grad = mm.get_gradient_final(n.out_id);
     auto in_grad = mm.get_gradient(n.in_id);
 
     auto weight = opt.get_weight(n.out_id);
@@ -123,7 +123,7 @@ void BackwardVisitor::visit(ActivationNode& n) {
     auto& mm = eng.get_mm();
     auto out = mm.get_feature(n.out_id);
     auto in = mm.get_feature(n.in_id);
-    auto out_grad = mm.get_gradient(n.out_id);
+    auto out_grad = mm.get_gradient_final(n.out_id);
     auto in_grad = mm.get_gradient(n.in_id);
     n.functor.backward(in_grad, out_grad, in, out);
 }
@@ -135,7 +135,7 @@ void BackwardVisitor::visit(AddNode& n) {
     auto& mm = eng.get_mm();
     auto a_g = mm.get_gradient(n.a_id);
     auto b_g = mm.get_gradient(n.b_id);
-    auto out_grad = mm.get_gradient(n.out_id);
+    auto out_grad = mm.get_gradient_final(n.out_id);
     thrust::transform(
         thrust::device, a_g, a_g + n.size, out_grad, a_g, thrust::plus<double>());
     thrust::transform(
@@ -147,7 +147,7 @@ void BackwardVisitor::visit(BatchNormNode& n) {
     auto& opt = eng.get_opt();
     auto out = mm.get_feature(n.out_id);
     auto in = mm.get_feature(n.in_id);
-    auto out_grad = mm.get_gradient(n.out_id);
+    auto out_grad = mm.get_gradient_final(n.out_id);
     auto in_grad = mm.get_gradient(n.in_id);
     auto weight = opt.get_weight(n.out_id);
     auto weight_grad = opt.get_weight_grad(n.out_id);
@@ -159,7 +159,7 @@ void BackwardVisitor::visit(ConvolutionNode& n) {
     auto& opt = eng.get_opt();
     auto out = mm.get_feature(n.out_id);
     auto in = mm.get_feature(n.in_id);
-    auto out_grad = mm.get_gradient(n.out_id);
+    auto out_grad = mm.get_gradient_final(n.out_id);
     auto in_grad = mm.get_gradient(n.in_id);
     auto weight = opt.get_weight(n.out_id);
     auto weight_grad = opt.get_weight_grad(n.out_id);
@@ -171,7 +171,7 @@ void BackwardVisitor::visit(PoolingNode& n) {
     auto& opt = eng.get_opt();
     auto out = mm.get_feature(n.out_id);
     auto in = mm.get_feature(n.in_id);
-    auto out_grad = mm.get_gradient(n.out_id);
+    auto out_grad = mm.get_gradient_final(n.out_id);
     auto in_grad = mm.get_gradient(n.in_id);
     n.functor.backward(in_grad, in, out_grad, out);
 }
