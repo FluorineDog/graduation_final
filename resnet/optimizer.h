@@ -37,21 +37,6 @@ inline void dog_resize_to(device_vector<float>& vec_vec, const dim_t& dim,
     vec_vec = host_vec;
 }
 
-inline DeviceVector<int> get_labels(const DeviceVector<T>& data, int batch,
-                                    int entry_size) {
-    std::vector<int> tmp;
-    thrust::host_vector<T> h_d(data);
-
-    for(auto bid : Range(batch)) {
-        double sum = 0;
-        for(auto eid : Range(entry_size)) {
-            sum += h_d[bid * entry_size + eid];
-        }
-        tmp.push_back(sum >= 0);
-    }
-    return tmp;
-}
-
 using namespace doglib::graph;
 
 struct OP1 {
