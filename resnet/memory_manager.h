@@ -24,6 +24,23 @@ class GradientDataHolder {
     const float* target;
 };
 
+class SmartManager {
+  public:
+    void register_node(int node_id, size_t sz);
+    float* try_get_node(int node_id);
+    float* prepare_new_node(int node_id);
+
+    void free_node(int node_id);
+    size_t get_node_sz(int node_id){
+        return meta_[node_id];
+    }
+  private:
+    std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
+    std::vector<size_t> meta_;
+    std::vector<std::tuple<int, size_t, float*>> reference_;
+    std::stack<std::tuple<int, size_t, float*>> free_list_;
+};
+
 class GradientManager {
   public:
     void register_gradient_map(int node_id, size_t size);
@@ -35,11 +52,11 @@ class GradientManager {
 
   private:
     friend GradientDataHolder;
-    std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
-    std::vector<size_t> meta_;
-    std::vector<std::tuple<int, size_t, float*>> reference_;
-    std::stack<std::tuple<int, size_t, float*>> free_list_;
+    SmartManager sm_;
 };
+
+
+
 
 class FeatureManager {
   public:
@@ -61,16 +78,13 @@ class FeatureManager {
   private:
     class Engine& eng;
     std::map<int, DeviceVector<float>> feature_mapping;
-    
 };
 
 class MemoryManager : public FeatureManager, public GradientManager {
   public:
-    MemoryManager(class Engine& eng): FeatureManager(eng){}
+    MemoryManager(class Engine& eng) : FeatureManager(eng) {}
     void terminate() {
         FeatureManager::terminate();
         GradientManager::terminate();
     }
 };
-
-
