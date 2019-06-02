@@ -129,6 +129,8 @@ void BackwardVisitor::visit(ActivationNode& n) {
 }
 
 void BackwardVisitor::visit(PlaceHolderNode& n) {
+    auto& mm = eng.get_mm();
+    auto x = mm.get_gradient_final(n.node_id);
     return;
 }
 void BackwardVisitor::visit(AddNode& n) {

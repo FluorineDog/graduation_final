@@ -28,6 +28,7 @@ float* GradientManager::get_gradient(int node_id) {
     }
     if(free_list_.empty()) {
         auto id = slots_.size();
+        cout << "alloc gradient map " << id << endl;
         auto sz = meta_[node_id];
         slots_.emplace_back(std::make_unique<DeviceVector<float>>(sz, 0));
         auto ptr = slots_[id]->data().get();
