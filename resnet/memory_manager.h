@@ -34,10 +34,10 @@ class GradientManager {
     void terminate() {}
   private:
     friend GradientDataHolder;
-    std::vector<DeviceVector<float>> slots_;
+    std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
     std::vector<size_t> meta_;
-    std::vector<std::pair<int, float*>> reference_;
-    std::stack<int> free_list_;
+    std::vector<std::tuple<int, size_t, float*>> reference_;
+    std::stack<std::tuple<int, size_t, float*>> free_list_;
 };
 
 class MemoryManager : public GradientManager {
