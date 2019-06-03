@@ -1,7 +1,7 @@
 #include "memory_manager.h"
 #include "engine.h"
-using std::vector;
 using std::set;
+using std::vector;
 
 vector<bool> find_breakpoints(const DynamicGraph& graph, int root) {
     struct NodeMeta {
@@ -158,26 +158,27 @@ auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnt
     for(auto f : featured) {
         assert(f);
     }
-    return plans; 
+    return plans;
 }
 
-void FeatureManager::analyse() {
+std::pair<vector<ExecPlan>, vector<ExecPlan>> FeatureManager::analyse(
+    const DynamicGraph& forward_graph, int src_node, int dest_node) {
     if(false) {
         // step 1: find all breakpoints
         // step 2: choose the breakpoints
         // step 3: generate forward execution plan
         // step 4: generate backwawrd execution plan
-        // step 5: execute it // todo!!!
+        // step 5: execute it // todo, at engine for the best
         // this is hard, but i believe you can do all
     }
     // step 1: find all breakpoints
-    auto candidates = find_breakpoints(eng.forward_graph, eng.src_node);
-    candidates[eng.dest_node] = true;
+    auto candidates = find_breakpoints(forward_graph, src_node);
+    candidates[dest_node] = true;
     // step 2: choose the breakpoints
-    auto brkpnts = choose_breakpoints(eng.forward_graph, candidates);
+    auto brkpnts = choose_breakpoints(forward_graph, candidates);
     // step 3: generate execution plan
-    auto fwd_plans = gen_forward_plan(eng.forward_graph, brkpnts);
-    auto bwd_plans = gen_backward_plan(eng.forward_graph, brkpnts);
-    
-    return;
+    auto fwd_plans = gen_forward_plan(forward_graph, brkpnts);
+    auto bwd_plans = gen_backward_plan(forward_graph, brkpnts);
+
+    return std::make_pair(fwd_plans, bwd_plans);
 }

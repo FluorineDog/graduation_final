@@ -44,9 +44,10 @@ class SmartManager {
     float* prepare_new_node(int node_id);
 
     void free_node(int node_id);
-    size_t get_node_sz(int node_id){
+    size_t get_node_sz(int node_id) {
         return meta_[node_id];
     }
+
   private:
     std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
     std::vector<size_t> meta_;
@@ -70,15 +71,16 @@ class GradientManager {
 
 class FeatureManager {
   public:
-    FeatureManager(class Engine& eng) : eng(eng) {}
-    void analyse();
+    FeatureManager() = default;
+    std::pair<std::vector<ExecPlan>, std::vector<ExecPlan>> analyse(
+        const DynamicGraph& forward_graph, int src_node, int dest_node);
 
     void register_feature_map(int node_id, size_t size) {
         sm_.register_node(node_id, size);
     }
 
     float* get_feature(int node_id) {
-        if(auto ptr = sm_.try_get_node(node_id)){
+        if(auto ptr = sm_.try_get_node(node_id)) {
             return ptr;
         } else {
             return sm_.prepare_new_node(node_id);
@@ -88,13 +90,12 @@ class FeatureManager {
     void terminate() {}
 
   private:
-    class Engine& eng;
     SmartManager sm_;
 };
 
 class MemoryManager : public FeatureManager, public GradientManager {
   public:
-    MemoryManager(class Engine& eng) : FeatureManager(eng) {}
+    MemoryManager() = default;
     void terminate() {
         FeatureManager::terminate();
         GradientManager::terminate();

@@ -11,7 +11,7 @@
 // graph executor, in one place
 class Engine {
   public:
-    Engine() : forward_graph(0), backward_graph(0), mm(*this) {
+    Engine() : forward_graph(0), backward_graph(0), mm() {
         // src_node and dest_node is here waiting
     }
     friend class FeatureManager;
@@ -26,7 +26,7 @@ class Engine {
         prepare_workspace();
         prepare_gradient_maps();    // (todo)
         register_weight_maps();    
-        mm.analyse();
+        std::tie(fwd_plan_, bwd_plan_) = mm.analyse(forward_graph, src_node, dest_node);
     }
     template <class T, class... Arg>
     int insert_leaf(Arg... args) {
@@ -90,6 +90,8 @@ class Engine {
 
     DynamicGraph forward_graph;
     DynamicGraph backward_graph;
+    vector<ExecPlan> fwd_plan_;
+    vector<ExecPlan> bwd_plan_;
     std::map<int, std::unique_ptr<NodeBase>> nodes;
     MemoryManager mm;
     Optimizer opt;
