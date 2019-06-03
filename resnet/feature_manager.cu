@@ -128,6 +128,7 @@ auto gen_forward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts
 auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts) {
     auto orders = toposort_acycle(forward_graph);
     auto N = forward_graph.n_vertex();
+    auto trans_graph = transpose(forward_graph);
 
     vector<ExecPlan> plans;
     vector<char> featured(N);
@@ -138,17 +139,22 @@ auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnt
     for(auto i : Range(N)) {
         i = N - 1 - i;
         auto v = orders[i];
-        if(!featured[v]) {
-            // recover plan
-            int head_index = i;
-            while(!featured[orders[head_index]]) {
-                --head_index;
-            }
-            for(auto node_index : Range(head_index + 1, i + 1)) {
-                auto node = orders[node_index];
-                assert(featured[node] == false);
-                plans.emplace_back(ExecType::forward, node);
-                featured[node] = true;
+
+        for(auto dp : trans_graph.adjacent(v)) {
+            if(!featured[dp]) {
+                // recover plan
+                auto tail = i - 1;
+                assert(featured[orders[tail]] == false) ;
+                int head_index = tail;
+                while(!featured[orders[head_index]]) {
+                    --head_index;
+                }
+                for(auto node_index : Range(head_index + 1, tail + 1)) {
+                    auto node = orders[node_index];
+                    assert(featured[node] == false);
+                    plans.emplace_back(ExecType::forward, node);
+                    featured[node] = true;
+                }
             }
         }
         assert(featured[v] == true);
