@@ -1,6 +1,7 @@
 #pragma once
 #include "helper/common.h"
 #include "helper/defs.h"
+#include <stdlib.h>
 
 enum class ExecType {
     forward,
@@ -39,6 +40,7 @@ class GradientDataHolder {
 
 class SmartManager {
   public:
+    SmartManager() : free_lists_(64) {}
     void register_node(int node_id, size_t sz);
     float* try_get_node(int node_id);
     float* prepare_new_node(int node_id);
@@ -47,12 +49,18 @@ class SmartManager {
     size_t get_node_sz(int node_id) {
         return meta_[node_id];
     }
+    using FreeList = std::stack<std::tuple<int, size_t, float*>>;
+    FreeList& get_free(size_t size) {
+        auto id = __builtin_clz(size | 0x1);
+        assert(id < 64);
+        return free_lists_[id];
+    }
 
   private:
     std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
     std::vector<size_t> meta_;
     std::vector<std::tuple<int, size_t, float*>> reference_;
-    std::stack<std::tuple<int, size_t, float*>> free_list_;
+    std::vector<FreeList> free_lists_;
 };
 
 class GradientManager {
@@ -79,7 +87,7 @@ class FeatureManager {
         sm_.register_node(node_id, size);
     }
 
-    float* get_feature(int node_id){
+    float* get_feature(int node_id) {
         auto ptr = sm_.try_get_node(node_id);
         assert(ptr);
         return ptr;

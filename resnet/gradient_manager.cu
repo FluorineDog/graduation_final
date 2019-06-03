@@ -44,11 +44,19 @@ float* SmartManager::try_get_node(int node_id) {
 }
 
 float* SmartManager::prepare_new_node(int node_id) {
-    assert(try_get_node(node_id) == nullptr);
+    // assert(try_get_node(node_id) == nullptr);
+    // auto sz = meta_[node_id];
+    // float* ptr;
+    // cudaMalloc(&ptr, sz * sizeof(float));
+    // reference_[node_id] = std::make_tuple(0, sz, ptr);
+    // return ptr;
+    // -------------------------------------
     int slot_id;
     size_t slot_sz;
     float* slot_ptr;
-    if(free_list_.empty()) {
+    auto the_sz = meta_[node_id];
+    auto& fl = get_free(the_sz);
+    if(fl.empty()) {
         auto id = slots_.size();
         cout << "[alloc map " << id << "] ";
         auto sz = meta_[node_id];
@@ -57,8 +65,8 @@ float* SmartManager::prepare_new_node(int node_id) {
         reference_[node_id] = std::make_tuple(id, sz, ptr);
         return ptr;
     }
-    std::tie(slot_id, slot_sz, slot_ptr) = free_list_.top();
-    free_list_.pop();
+    std::tie(slot_id, slot_sz, slot_ptr) = fl.top();
+    fl.pop();
     auto std_sz = meta_[node_id];
     auto& vec = *slots_[slot_id];
     if(std_sz >= slot_sz) {
@@ -72,8 +80,13 @@ float* SmartManager::prepare_new_node(int node_id) {
 }
 
 void SmartManager::free_node(int node_id) {
+    // auto& ref = reference_[node_id];
+    // cudaFree(get<2>(ref));
+    // ref = std::make_tuple(-1, 0, nullptr);
+    
+    // -------------------------------------
     auto& ref = reference_[node_id];
-    free_list_.push(ref);
+    get_free(std::get<1>(ref)).push(ref);
     ref = std::make_tuple(-1, 0, nullptr);
 }
 
