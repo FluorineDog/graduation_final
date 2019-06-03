@@ -8,7 +8,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 20;
+    int B = 256;
     int pixel = 32;
     int features = 3 * pixel * pixel;
     int classes = 10;
@@ -61,15 +61,14 @@ int main() {
         // dog_print("??", losses, dim_t{B});
         auto loss = thrust::reduce(thrust::device, losses.begin(), losses.end());
 
-        double ck_tm = 0;
+        auto correct = get_acc(act, labels_beg, B, classes);
+        double cross_tm = 0;
         if(offset_lb) {
             ce.backward(act_grad, act, losses, dev_labels.data().get());
-            ck_tm = timer.get_step_seconds();
+            cross_tm = timer.get_step_seconds();
             eng.backward_pass(act_grad);
         }
         auto back_tm = timer.get_step_seconds();
-        auto correct = get_acc(act, labels_beg, B, classes);
-        auto acc_tm = timer.get_step_seconds();
         if(loss != loss) {
             break;
         }
@@ -85,11 +84,9 @@ int main() {
                  << "fwd_tm"
                  << " " << fwd_tm << " "
                  << "cross_tm"
-                 << " " << ck_tm << " "
+                 << " " << cross_tm << " "
                  << "bak_tm"
                  << " " << back_tm << " "
-                 << "acc_tm"
-                 << " " << acc_tm << " "
                  << "all_tm"
                  << " " << all_tm << " "    //
                 ;
