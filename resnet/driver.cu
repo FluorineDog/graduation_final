@@ -8,7 +8,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 256;
+    int B = 500;
     int pixel = 32;
     int features = 3 * pixel * pixel;
     int classes = 10;
@@ -31,13 +31,23 @@ int main() {
     CrossEntropy ce(B, classes);
     global.update_workspace_size(ce.workspace());
     doglib::time::TimerAdvanced timer([] { cudaDeviceSynchronize(); });
-    for(auto x : Range(300)) {
+    int train_count;
+    int test_count;
+    double train_acc;
+    double test_acc;
+    for(auto x : Range(total * 5 / B)) {
         timer.reset();
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;
         auto offset_dt = offset_lb * features;
+        if(offset_lb == 0){
+            train_count = 0;
+            test_count = 0;
+            train_acc = 0;
+            test_acc = 0;
+        }
 
-        if(offset_lb != 0) {
+        if(offset_lb < 50000 ) {
             global.set_training(true);
         } else {
             global.set_training(false);
@@ -63,7 +73,7 @@ int main() {
 
         auto correct = get_acc(act, labels_beg, B, classes);
         double cross_tm = 0;
-        if(offset_lb) {
+        if(global.is_training()) {
             ce.backward(act_grad, act, losses, dev_labels.data().get());
             cross_tm = timer.get_step_seconds();
             eng.backward_pass(act_grad);
@@ -72,11 +82,13 @@ int main() {
         if(loss != loss) {
             break;
         }
-        if(offset_lb) {
+        if(global.is_training()) {
             static float lr = 0.0002 / B;
             eng.get_opt().step(lr);
             auto all_tm = timer.get_overall_seconds();
-            cout << loss / B << " " << correct << " " << endl;
+            train_acc += correct;
+            train_count += 1;
+            cout << loss / B << " " << correct << " " << train_acc << " " << endl;
             cout << "init_tm"
                  << " " << init_tm << " "
                  << "zero_tm"
@@ -92,7 +104,9 @@ int main() {
                 ;
         } else {
             auto t = timer.get_step_seconds();
-            cout << "test: " << loss / B << " " << correct << " " << t << endl;
+            test_acc += correct;
+            test_count += 1;
+            cout << "test: " << loss / B << " " << test_acc / test_count << " " << t << endl;
         }
         cout << endl;
     }
