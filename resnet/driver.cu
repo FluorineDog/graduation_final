@@ -36,6 +36,7 @@ int main() {
     double train_acc;
     double test_acc;
     for(auto x : Range(total * 5 / B)) {
+        global.round++;
         timer.reset();
         auto offset_lb = x % (total / B) * B;
         // offset_lb = 0;

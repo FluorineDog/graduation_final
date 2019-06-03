@@ -40,6 +40,7 @@ class Global {
     void set_training(bool training){
         this->training_ = training; 
     }
+    size_t round = 0;
   private:
     bool training_ = true;
     device_vector<float> workspace_;

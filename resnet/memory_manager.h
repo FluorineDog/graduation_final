@@ -2,6 +2,7 @@
 #include "helper/common.h"
 #include "helper/defs.h"
 #include <stdlib.h>
+#include <numeric>
 
 enum class ExecType {
     forward,
@@ -37,8 +38,16 @@ class GradientDataHolder {
     int node_id;
     const float* target;
 };
+constexpr size_t inf = std::numeric_limits<size_t>::max() / 10;
+
 
 using SlotMeta = std::tuple<int, size_t, float*>;
+struct SmartGlobal{
+   std::multimap<size_t, SlotMeta> free_lists_;
+   int step = 0;
+   size_t last_round = 0;
+};
+
 class SmartManager {
   public:
     void register_node(int node_id, size_t sz);
@@ -49,38 +58,39 @@ class SmartManager {
     size_t get_node_sz(int node_id) {
         return meta_[node_id];
     }
-    // SlotMeta get_best(size_t sz) {
-    //     if(free_lists_.size() == 0) {
-    //         return std::make_tuple(-1, 0, nullptr);
-    //     }
-    //     auto iter = free_lists_.lower_bound(sz);
-    //     if(iter == free_lists_.end()) {
-    //         --iter;
-    //     }
-    //     auto res = iter->second;
-    //     free_lists_.erase(iter);
-    //     return res;
-    // }
-    // void return_free(SlotMeta x){
-    //     auto sz = std::get<1>(x);
-    //     free_lists_.emplace(sz, x);
-    // }
-    SlotMeta get_best(size_t sz){
-        if(fl_.empty()){
+    static SlotMeta get_best(size_t sz) {
+        auto& free_lists_ = sg_.free_lists_;
+        if(free_lists_.size() == 0) {
             return std::make_tuple(-1, 0, nullptr);
         }
-        auto res = fl_.top();
-        fl_.pop();
+        auto iter = free_lists_.lower_bound(sz);
+        if(iter == free_lists_.end()) {
+            --iter;
+        }
+        auto res = iter->second;
+        free_lists_.erase(iter);
         return res;
     }
-    void return_free(SlotMeta x) {
-        fl_.push(x);
+    static void return_free(SlotMeta x) {
+        auto sz = std::get<1>(x);
+        sg_.free_lists_.emplace(sz, x);
     }
+
+    // SlotMeta get_best(size_t sz){
+    //     if(fl_.empty()){
+    //         return std::make_tuple(-1, 0, nullptr);
+    //     }
+    //     auto res = fl_.top();
+    //     fl_.pop();
+    //     return res;
+    // }
+    // void return_free(SlotMeta x) {
+    //     fl_.push(x);
+    // }
 
   private:
     static std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
-    // static std::multimap<size_t, SlotMeta> free_lists_;
-    std::stack<SlotMeta> fl_;
+    static SmartGlobal sg_;
     std::vector<size_t> meta_;
     std::vector<SlotMeta> reference_;
 };
