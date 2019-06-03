@@ -40,12 +40,13 @@ class GradientDataHolder {
 };
 constexpr size_t inf = std::numeric_limits<size_t>::max() / 10;
 
-
 using SlotMeta = std::tuple<int, size_t, float*>;
-struct SmartGlobal{
-   std::multimap<size_t, SlotMeta> free_lists_;
-   int step = 0;
-   size_t last_round = 0;
+struct SmartGlobal {
+    std::multimap<size_t, SlotMeta> free_lists_;
+    vector<SlotMeta> record;
+    vector<size_t> verifier;
+    int step = 0;
+    size_t last_round = 0;
 };
 
 class SmartManager {
@@ -59,19 +60,38 @@ class SmartManager {
         return meta_[node_id];
     }
     static SlotMeta get_best(size_t sz) {
+        SlotMeta res;
+        // if(global.round >= 2) {
+        //     if(sg_.last_round < global.round){
+        //         sg_.last_round = global.round;
+        //         sg_.step = 0;
+        //     }
+        //     assert(sg_.verifier[sg_.step] == sz);
+        //     res = sg_.record[sg_.step];
+        //     ++sg_.step;
+        //     return res;
+        // }
+
         auto& free_lists_ = sg_.free_lists_;
         if(free_lists_.size() == 0) {
-            return std::make_tuple(-1, 0, nullptr);
+            res = std::make_tuple(-1, 0, nullptr);
+        } else {
+            auto iter = free_lists_.lower_bound(sz);
+            if(iter == free_lists_.end()) {
+                --iter;
+            }
+            res = iter->second;
+            free_lists_.erase(iter);
         }
-        auto iter = free_lists_.lower_bound(sz);
-        if(iter == free_lists_.end()) {
-            --iter;
-        }
-        auto res = iter->second;
-        free_lists_.erase(iter);
+        // the first round
+        // sg_.record.push_back(res);
+        // sg_.verifier.push_back(sz);
         return res;
     }
-    static void return_free(SlotMeta x) {
+    static void return_free(const SlotMeta& x) {
+        // if(global.round >= 2){
+        //     return;
+        // }
         auto sz = std::get<1>(x);
         sg_.free_lists_.emplace(sz, x);
     }
