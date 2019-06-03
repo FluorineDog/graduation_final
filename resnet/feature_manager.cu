@@ -142,12 +142,18 @@ auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnt
     auto rev_orders = orders;
     auto N = forward_graph.n_vertex();
     std::reverse(rev_orders.begin(), rev_orders.end());
-    vector<bool> featured(N);
+
+    ExecPlan plans;
+    vector<char> featured(N);
     for(auto id: brkpnts) {
-        
+        featured[id] = true; 
     }
-    for(auto v: rev_orders.begin()) {
-        
+
+    for(auto v: rev_orders) {
+        if(featured[v]) {
+            // recover plan
+        }        
+         
     }
 }
 
