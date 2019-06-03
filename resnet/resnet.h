@@ -110,3 +110,8 @@ inline int resnet152(Engine& eng, int x_, int classes) {
     return construct_resnet(eng, x_, {3, 8, 36, 3}, classes);
 }
 
+
+inline int resnet_inf(Engine& eng, int x_, int classes) {
+    return construct_resnet(eng, x_, {3, 8, 460, 3}, classes);
+}
+

@@ -8,7 +8,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 64;
+    int B = 100;
     int pixel = 32;
     int features = 3 * pixel * pixel;
     int classes = 10;
@@ -17,7 +17,7 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
     // x = construct_resnet(eng, x, {1, 1, 1, 1}, classes);
-    x = resnet152(eng, x, classes);
+    x = resnet_inf(eng, x, classes);
     eng.dest_node = x;
     eng.finish_off();
 
