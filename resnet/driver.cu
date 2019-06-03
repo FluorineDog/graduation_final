@@ -17,7 +17,7 @@ int main() {
     auto x = eng.insert_leaf<PlaceHolderNode>(input_dim);
     eng.src_node = x;
     // x = construct_resnet(eng, x, {1, 1, 1, 1}, classes);
-    x = resnet152(eng, x, classes);
+    x = resnet50(eng, x, classes);
     eng.dest_node = x;
     eng.finish_off();
 
