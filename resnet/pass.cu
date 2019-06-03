@@ -32,7 +32,6 @@ void Engine::prepare_workspace() {
     }
 }
 
-
 void Engine::register_weight_maps() {
     MetaVisitor meta;
     ProcedureDFS dfs(backward_graph);
@@ -46,14 +45,31 @@ void Engine::register_weight_maps() {
 }
 
 void Engine::forward_pass(float* input) {
-    ForwardVisitor fwd(*this);
-    fwd.set(input);
-    ProcedureDFS dfs(backward_graph);
-    dfs.set_visitor(Transfer::finish, [&, this](int, int id) {
-        auto& node = *this->nodes[id];
-        node.accept(fwd);
-    });
-    dfs.execute_at(dest_node);
+    ForwardVisitor fwd_v(*this);
+    fwd_v.set(input);
+    for(auto plan : fwd_plan_) {
+        auto& node = *nodes[plan.node_id];
+        switch(plan.type) {
+            case ExecType::backward: {
+                // node.accept(fwd);
+                assert(false);
+                break;
+            }
+            case ExecType::forward: {
+                node.accept(fwd_v);        
+            }
+            case ExecType::free_feature: {
+                // silence
+            }
+            default: break;
+        }
+    }
+    // ProcedureDFS dfs(backward_graph);
+    // dfs.set_visitor(Transfer::finish, [&, this](int, int id) {
+    //     auto& node = *this->nodes[id];
+    //     node.accept(fwd);
+    // });
+    // dfs.execute_at(dest_node);
 }
 
 void Engine::backward_pass(float* act_grad) {
@@ -61,10 +77,27 @@ void Engine::backward_pass(float* act_grad) {
     auto dim = MetaVisitor().out_dim(*nodes[dest_node]);
     auto top = mm.get_gradient(dest_node);
     cudaMemcpy(top, act_grad, get_volume(dim) * sizeof(float), cudaMemcpyDefault);
-    ProcedureDFS dfs(forward_graph);
-    dfs.set_visitor(Transfer::finish, [&, this](int, int id){
-        auto& node = *nodes[id];
-        node.accept(bwd);
-    });
-    dfs.execute_at(src_node);
+
+    for(auto plan : bwd_plan_) {
+        auto& node = *nodes[plan.node_id];
+        switch(plan.type) {
+            case ExecType::backward: {
+                node.accept(bwd);
+                break;
+            }
+            case ExecType::forward: {
+                // silence
+            }
+            case ExecType::free_feature: {
+                
+            }
+            default: break;
+        }
+    }
+    // ProcedureDFS dfs(forward_graph);
+    // dfs.set_visitor(Transfer::finish, [&, this](int, int id){
+    //     auto& node = *nodes[id];
+    //     node.accept(bwd);
+    // });
+    // dfs.execute_at(src_node);
 }
