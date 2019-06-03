@@ -90,9 +90,9 @@ inline int construct_resnet(Engine& eng, int x_, std::vector<int> blocks, int cl
     x = eng.insert_node<ActivationNode>(x);
     int in_planes = 64;
     std::tie(x, in_planes) = make_layer(eng, x, in_planes, 64, blocks[0], 1);
-    std::tie(x, in_planes) = make_layer(eng, x, in_planes, 128, blocks[0], 2);
-    std::tie(x, in_planes) = make_layer(eng, x, in_planes, 256, blocks[0], 2);
-    std::tie(x, in_planes) = make_layer(eng, x, in_planes, 512, blocks[0], 2);
+    std::tie(x, in_planes) = make_layer(eng, x, in_planes, 128, blocks[1], 2);
+    std::tie(x, in_planes) = make_layer(eng, x, in_planes, 256, blocks[2], 2);
+    std::tie(x, in_planes) = make_layer(eng, x, in_planes, 512, blocks[3], 2);
     x = eng.insert_node<PoolingNode>(x, /*kernel*/ 3, /*padding*/ 1, /*stride*/ 1);
     x = eng.insert_node<FCNode>(x, classes);
     return x;
