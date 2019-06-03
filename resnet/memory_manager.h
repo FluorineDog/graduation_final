@@ -88,6 +88,7 @@ class SmartManager {
             slots_.emplace_back(std::make_unique<DeviceVector<float>>());
             slots_.back()->resize(sz);
             float* ptr = *slots_[id];
+            assert(ptr);
             res = std::make_tuple(id, sz, ptr);
             // res = std::make_tuple(-1, 0, nullptr);
         } else {

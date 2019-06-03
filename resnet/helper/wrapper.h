@@ -27,7 +27,8 @@ class DeviceVector {
         if(ptr){
             cudaFree(ptr);
         }
-        cudaMalloc(&ptr, size * sizeof(T));
+        auto st = cudaMalloc(&ptr, size * sizeof(T));
+        assert(!st);
     }
     float* begin() {
         return ptr;
