@@ -4,11 +4,11 @@
 #include <arpa/inet.h>
 #include <thrust/device_vector.h>
 using std::vector;
-// const char* data_file = "/home/mike/workspace/data/cifar10/data.bin";
-// const char* labels_file = "/home/mike/workspace/data/cifar10/labels.bin";
+const char* data_file = "/home/mike/workspace/data/cifar10/data.bin";
+const char* labels_file = "/home/mike/workspace/data/cifar10/labels.bin";
 
-const char* data_file = "/home/guilin/workspace/data/cifar10/data.bin";
-const char* labels_file = "/home/guilin/workspace/data/cifar10/labels.bin";
+// const char* data_file = "/home/guilin/workspace/data/cifar10/data.bin";
+// const char* labels_file = "/home/guilin/workspace/data/cifar10/labels.bin";
 
 host_vector<float> get_data() {
     host_vector<float> data;
