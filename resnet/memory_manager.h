@@ -79,12 +79,23 @@ class FeatureManager {
         sm_.register_node(node_id, size);
     }
 
-    float* get_feature(int node_id) {
+    float* get_feature(int node_id){
+        auto ptr = sm_.try_get_node(node_id);
+        assert(ptr);
+        return ptr;
+    }
+
+    float* get_feature_write(int node_id) {
         if(auto ptr = sm_.try_get_node(node_id)) {
             return ptr;
         } else {
             return sm_.prepare_new_node(node_id);
         }
+    }
+
+    void free_feature(int node_id) {
+        assert(node_id >= 0);
+        sm_.free_node(node_id);
     }
 
     void terminate() {}

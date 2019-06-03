@@ -60,6 +60,7 @@ void Engine::forward_pass(float* input) {
             }
             case ExecType::free_feature: {
                 // silence
+                
             }
             default: break;
         }
