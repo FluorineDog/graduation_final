@@ -61,7 +61,7 @@ void Engine::forward_pass(float* input) {
             }
             case ExecType::free_feature: {
                 // silence
-                mm.free_feature(plan.node_id); 
+                // mm.free_feature(plan.node_id); 
                 break;
             }
             default: break;
@@ -91,11 +91,11 @@ void Engine::backward_pass(float* act_grad) {
             }
             case ExecType::forward: {
                 // silence
-                node.accept(forwd); 
+                // node.accept(forwd); 
                 break;
             }
             case ExecType::free_feature: {
-                mm.free_feature(plan.node_id); 
+                // mm.free_feature(plan.node_id); 
                 break;
             }
             default: break;

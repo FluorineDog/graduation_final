@@ -66,14 +66,17 @@ float* SmartManager::prepare_new_node(int node_id) {
     // }
 
     std::tie(slot_id, slot_sz, slot_ptr) = tp;
+    assert(slot_ptr);
     auto std_sz = meta_[node_id];
     if(std_sz > slot_sz) {
         auto& vec = *slots_[slot_id];
         vec.resize(std_sz);
         slot_sz = std_sz;
         slot_ptr = vec;
+        assert(slot_ptr);
     }
     reference_[node_id] = std::make_tuple(slot_id, slot_sz, slot_ptr);
+    assert(slot_ptr);
     return slot_ptr;
 }
 

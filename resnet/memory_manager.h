@@ -61,26 +61,26 @@ class SmartManager {
     }
     static SlotMeta get_best(size_t sz) {
         SlotMeta res;
-        if(global.round >= 2) {
-            if(sg_.last_round < global.round) {
-                sg_.last_round = global.round;
-                sg_.step = 0;
-            }
+        // if(global.round >= 2) {
+        //     if(sg_.last_round < global.round) {
+        //         sg_.last_round = global.round;
+        //         sg_.step = 0;
+        //     }
 
-            assert(sg_.verifier[sg_.step] == sz);
-            if(global.round == 2) {
-                // update info
-                auto& res = sg_.record[sg_.step];
-                auto& ref = slots_[std::get<0>(res)];
-                std::get<1>(res) = ref->size();
-                std::get<2>(res) = *ref;
-                assert(ref->size() >= sz);
-            }
-            res = sg_.record[sg_.step];
-            ++sg_.step;
+        //     assert(sg_.verifier[sg_.step] == sz);
+        //     if(global.round == 2) {
+        //         // update info
+        //         auto& res = sg_.record[sg_.step];
+        //         auto& ref = slots_[std::get<0>(res)];
+        //         std::get<1>(res) = ref->size();
+        //         std::get<2>(res) = *ref;
+        //         assert(ref->size() >= sz);
+        //     }
+        //     res = sg_.record[sg_.step];
+        //     ++sg_.step;
 
-            return res;
-        }
+        //     return res;
+        // }
 
         auto& free_lists_ = sg_.free_lists_;
         if(free_lists_.size() == 0) {
@@ -99,16 +99,16 @@ class SmartManager {
             free_lists_.erase(iter);
         }
         // the first round
-        if(global.round == 1) {
-            sg_.record.push_back(res);
-            sg_.verifier.push_back(sz);
-        }
+        // if(global.round == 1) {
+        //     sg_.record.push_back(res);
+        //     sg_.verifier.push_back(sz);
+        // }
         return res;
     }
     static void return_free(const SlotMeta& x) {
-        if(global.round >= 2) {
-            return;
-        }
+        // if(global.round >= 2) {
+        //     return;
+        // }
         auto sz = std::get<1>(x);
         sg_.free_lists_.emplace(sz, x);
     }
