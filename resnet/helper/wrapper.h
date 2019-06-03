@@ -22,6 +22,7 @@ class DeviceVector {
     DeviceVector& operator=(const DeviceVector&) = delete;
     // using thrust::device_vector<T>::device_vector;
     void resize(size_t size) {
+        assert(size > size_);
         size_ = size;
         if(ptr){
             cudaFree(ptr);
@@ -48,6 +49,6 @@ class DeviceVector {
          
     }
   private:
-    size_t size_; 
+    size_t size_ = 0; 
     T* ptr = nullptr;
 };

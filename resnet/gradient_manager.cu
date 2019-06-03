@@ -54,21 +54,21 @@ float* SmartManager::prepare_new_node(int node_id) {
     float* slot_ptr;
     auto the_sz = meta_[node_id];
     auto tp = get_best(the_sz);
-    if(std::get<0>(tp) == -1) {
-        auto id = slots_.size();
-        cout << "[alloc map " << id << "] ";
-        auto sz = meta_[node_id];
-        slots_.emplace_back(std::make_unique<DeviceVector<float>>());
-        slots_.back()->resize(sz);
-        float* ptr = *slots_[id];
-        reference_[node_id] = std::make_tuple(id, sz, ptr);
-        return ptr;
-    }
+    // if(std::get<0>(tp) == -1) {
+    //     auto id = slots_.size();
+    //     cout << "[alloc map " << id << "] ";
+    //     auto sz = meta_[node_id];
+    //     slots_.emplace_back(std::make_unique<DeviceVector<float>>());
+    //     slots_.back()->resize(sz);
+    //     float* ptr = *slots_[id];
+    //     reference_[node_id] = std::make_tuple(id, sz, ptr);
+    //     return ptr;
+    // }
 
     std::tie(slot_id, slot_sz, slot_ptr) = tp;
     auto std_sz = meta_[node_id];
-    auto& vec = *slots_[slot_id];
-    if(std_sz >= slot_sz) {
+    if(std_sz > slot_sz) {
+        auto& vec = *slots_[slot_id];
         vec.resize(std_sz);
         slot_sz = std_sz;
         slot_ptr = vec;
