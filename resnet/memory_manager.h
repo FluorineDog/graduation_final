@@ -1,6 +1,19 @@
 #pragma once
 #include "helper/common.h"
 #include "helper/defs.h"
+
+enum class ExecType {
+    forward,
+    backward,
+    free_feature    // and
+};
+
+struct ExecPlan {
+    ExecType type;
+    int node_id;
+    ExecPlan(ExecType type, int node_id) : type(type), node_id(node_id) {}
+};
+
 class GradientDataHolder {
   public:
     GradientDataHolder(class GradientManager& gm, int node_id, const float* target)
@@ -54,9 +67,6 @@ class GradientManager {
     friend GradientDataHolder;
     SmartManager sm_;
 };
-
-
-
 
 class FeatureManager {
   public:

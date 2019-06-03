@@ -1,6 +1,7 @@
 #include "memory_manager.h"
 #include "engine.h"
 using std::vector;
+using std::set;
 
 vector<bool> find_breakpoints(const DynamicGraph& graph, int root) {
     struct NodeMeta {
@@ -95,19 +96,6 @@ auto choose_breakpoints(const DynamicGraph& graph, const vector<bool>& is_breaki
     return pivots;
 }
 
-enum class ExecType {
-    forward,
-    backward,
-    free_feature    // and
-};
-
-struct ExecPlan {
-    ExecType type;
-    int node_id;
-    ExecPlan(ExecType type, int node_id) : type(type), node_id(node_id) {}
-};
-using std::set;
-using std::vector;
 auto gen_forward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts) {
     //
     auto orders = toposort_acycle(forward_graph);
@@ -179,7 +167,7 @@ void FeatureManager::analyse() {
         // step 2: choose the breakpoints
         // step 3: generate forward execution plan
         // step 4: generate backwawrd execution plan
-        // step 5: execute it
+        // step 5: execute it // todo!!!
         // this is hard, but i believe you can do all
     }
     // step 1: find all breakpoints
@@ -190,5 +178,6 @@ void FeatureManager::analyse() {
     // step 3: generate execution plan
     auto fwd_plans = gen_forward_plan(eng.forward_graph, brkpnts);
     auto bwd_plans = gen_backward_plan(eng.forward_graph, brkpnts);
+    
     return;
 }
