@@ -8,7 +8,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 256;
+    int B = 500;
     int pixel = 32;
     int features = 3 * pixel * pixel;
     int classes = 10;
@@ -84,7 +84,7 @@ int main() {
             break;
         }
         if(global.is_training()) {
-            static float lr = 0.0002 / B;
+            static float lr = 0.0002 / 256;
             eng.get_opt().step(lr);
             auto all_tm = timer.get_overall_seconds();
             train_acc += correct;
