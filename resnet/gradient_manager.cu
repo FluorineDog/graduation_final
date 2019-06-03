@@ -105,4 +105,4 @@ GradientDataHolder::~GradientDataHolder() {
 
 std::vector<std::unique_ptr<DeviceVector<float>>> SmartManager::slots_;
 
-std::multimap<size_t, SlotMeta> SmartManager::free_lists_;
+// std::multimap<size_t, SlotMeta> SmartManager::free_lists_;

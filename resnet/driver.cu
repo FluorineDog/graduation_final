@@ -8,7 +8,7 @@ Global global;
 int main() {
     Engine eng;
     // define network structure
-    int B = 500;
+    int B = 256;
     int pixel = 32;
     int features = 3 * pixel * pixel;
     int classes = 10;
@@ -88,7 +88,7 @@ int main() {
             auto all_tm = timer.get_overall_seconds();
             train_acc += correct;
             train_count += 1;
-            cout << loss / B << " " << correct << " " << train_acc << " " << endl;
+            cout << loss / B << " " << correct << " " << train_acc / train_count << " " << endl;
             cout << "init_tm"
                  << " " << init_tm << " "
                  << "zero_tm"

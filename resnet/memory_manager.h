@@ -49,26 +49,38 @@ class SmartManager {
     size_t get_node_sz(int node_id) {
         return meta_[node_id];
     }
-    SlotMeta get_best(size_t sz) {
-        if(free_lists_.size() == 0) {
+    // SlotMeta get_best(size_t sz) {
+    //     if(free_lists_.size() == 0) {
+    //         return std::make_tuple(-1, 0, nullptr);
+    //     }
+    //     auto iter = free_lists_.lower_bound(sz);
+    //     if(iter == free_lists_.end()) {
+    //         --iter;
+    //     }
+    //     auto res = iter->second;
+    //     free_lists_.erase(iter);
+    //     return res;
+    // }
+    // void return_free(SlotMeta x){
+    //     auto sz = std::get<1>(x);
+    //     free_lists_.emplace(sz, x);
+    // }
+    SlotMeta get_best(size_t sz){
+        if(fl_.empty()){
             return std::make_tuple(-1, 0, nullptr);
         }
-        auto iter = free_lists_.lower_bound(sz);
-        if(iter == free_lists_.end()) {
-            --iter;
-        }
-        auto res = iter->second;
-        free_lists_.erase(iter);
+        auto res = fl_.top();
+        fl_.pop();
         return res;
     }
-    void return_free(SlotMeta x){
-        auto sz = std::get<1>(x);
-        free_lists_.emplace(sz, x);
+    void return_free(SlotMeta x) {
+        fl_.push(x);
     }
 
   private:
     static std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
-    static std::multimap<size_t, SlotMeta> free_lists_;
+    // static std::multimap<size_t, SlotMeta> free_lists_;
+    std::stack<SlotMeta> fl_;
     std::vector<size_t> meta_;
     std::vector<SlotMeta> reference_;
 };
