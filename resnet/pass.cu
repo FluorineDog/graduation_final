@@ -57,10 +57,12 @@ void Engine::forward_pass(float* input) {
             }
             case ExecType::forward: {
                 node.accept(fwd_v);        
+                break;
             }
             case ExecType::free_feature: {
                 // silence
-                
+                mm.free_feature(plan.node_id); 
+                break;
             }
             default: break;
         }
@@ -74,6 +76,7 @@ void Engine::forward_pass(float* input) {
 }
 
 void Engine::backward_pass(float* act_grad) {
+    ForwardVisitor forwd(*this);
     BackwardVisitor bwd(*this);
     auto dim = MetaVisitor().out_dim(*nodes[dest_node]);
     auto top = mm.get_gradient(dest_node);
@@ -88,9 +91,12 @@ void Engine::backward_pass(float* act_grad) {
             }
             case ExecType::forward: {
                 // silence
+                node.accept(forwd); 
+                break;
             }
             case ExecType::free_feature: {
-                
+                mm.free_feature(plan.node_id); 
+                break;
             }
             default: break;
         }
