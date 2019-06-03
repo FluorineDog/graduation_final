@@ -6,14 +6,7 @@ void GradientManager::register_gradient_map(int node_id, size_t size) {
     sm_.register_node(node_id, size);
 }
 
-void SmartManager::register_node(int node_id, size_t size) {
-    if(node_id <= meta_.size()) {
-        meta_.resize(node_id + 1, 0);
-        reference_.resize(node_id + 1, std::make_tuple(-1, 0, nullptr));
-    }
-    assert(meta_[node_id] == 0);
-    meta_[node_id] = size;
-}
+
 
 float* GradientManager::get_gradient(int node_id) {
     assert(node_id >= 0);
@@ -24,6 +17,15 @@ float* GradientManager::get_gradient(int node_id) {
     auto sz = sm_.get_node_sz(node_id);
     thrust::fill_n(thrust::device, ptr, sz, 0);
     return ptr;
+}
+
+void SmartManager::register_node(int node_id, size_t size) {
+    if(node_id <= meta_.size()) {
+        meta_.resize(node_id + 1, 0);
+        reference_.resize(node_id + 1, std::make_tuple(-1, 0, nullptr));
+    }
+    assert(meta_[node_id] == 0);
+    meta_[node_id] = size;
 }
 
 float* SmartManager::try_get_node(int node_id) {
@@ -69,17 +71,19 @@ float* SmartManager::prepare_new_node(int node_id) {
     return slot_ptr;
 }
 
+void SmartManager::free_node(int node_id) {
+    auto& ref = reference_[node_id];
+    free_list_.push(ref);
+    ref = std::make_tuple(-1, 0, nullptr);
+}
+
 GradientDataHolder GradientManager::get_gradient_final(int node_id) {
     assert(node_id >= 0);
     auto slot_ptr = sm_.try_get_node(node_id);
     assert(slot_ptr);
     return GradientDataHolder(*this, node_id, slot_ptr);
 }
-void SmartManager::free_node(int node_id) {
-    auto& ref = reference_[node_id];
-    free_list_.push(ref);
-    ref = std::make_tuple(-1, 0, nullptr);
-}
+
 
 GradientDataHolder::~GradientDataHolder() {
     if(node_id < 0) {
