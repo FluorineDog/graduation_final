@@ -38,7 +38,7 @@ class GradientDataHolder {
     const float* target;
 };
 
-using FreeList = std::stack<std::tuple<int, size_t, float*>>;
+using SlotMeta = std::tuple<int, size_t, float*>;
 class SmartManager {
   public:
     void register_node(int node_id, size_t sz);
@@ -49,23 +49,33 @@ class SmartManager {
     size_t get_node_sz(int node_id) {
         return meta_[node_id];
     }
-    FreeList& get_free(size_t size) {
-        auto id = __builtin_clz(size | 0x1);
-        assert(id < 64);
-        return free_lists_[id];
+    SlotMeta get_best(size_t sz) {
+        if(free_lists_.size() == 0) {
+            return std::make_tuple(-1, 0, nullptr);
+        }
+        auto iter = free_lists_.lower_bound(sz);
+        if(iter == free_lists_.end()) {
+            --iter;
+        }
+        auto res = iter->second;
+        free_lists_.erase(iter);
+        return res;
+    }
+    void return_free(SlotMeta x){
+        auto sz = std::get<1>(x);
+        free_lists_.emplace(sz, x);
     }
 
   private:
     static std::vector<std::unique_ptr<DeviceVector<float>>> slots_;
-    static std::vector<FreeList> free_lists_;
+    static std::multimap<size_t, SlotMeta> free_lists_;
     std::vector<size_t> meta_;
-    std::vector<std::tuple<int, size_t, float*>> reference_;
+    std::vector<SlotMeta> reference_;
 };
-
 
 class GradientManager {
   public:
-  void register_gradient_map(int node_id, size_t size);
+    void register_gradient_map(int node_id, size_t size);
     float* get_gradient(int node_id);
     GradientDataHolder get_gradient_final(int node_id);
 

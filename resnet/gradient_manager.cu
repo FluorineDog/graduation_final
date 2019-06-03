@@ -6,8 +6,6 @@ void GradientManager::register_gradient_map(int node_id, size_t size) {
     sm_.register_node(node_id, size);
 }
 
-
-
 float* GradientManager::get_gradient(int node_id) {
     assert(node_id >= 0);
     if(auto ptr = sm_.try_get_node(node_id)) {
@@ -55,8 +53,8 @@ float* SmartManager::prepare_new_node(int node_id) {
     size_t slot_sz;
     float* slot_ptr;
     auto the_sz = meta_[node_id];
-    auto& fl = get_free(the_sz);
-    if(fl.empty()) {
+    auto tp = get_best(the_sz);
+    if(std::get<0>(tp) == -1) {
         auto id = slots_.size();
         cout << "[alloc map " << id << "] ";
         auto sz = meta_[node_id];
@@ -66,8 +64,8 @@ float* SmartManager::prepare_new_node(int node_id) {
         reference_[node_id] = std::make_tuple(id, sz, ptr);
         return ptr;
     }
-    std::tie(slot_id, slot_sz, slot_ptr) = fl.top();
-    fl.pop();
+
+    std::tie(slot_id, slot_sz, slot_ptr) = tp;
     auto std_sz = meta_[node_id];
     auto& vec = *slots_[slot_id];
     if(std_sz >= slot_sz) {
@@ -83,10 +81,11 @@ void SmartManager::free_node(int node_id) {
     // auto& ref = reference_[node_id];
     // cudaFree(get<2>(ref));
     // ref = std::make_tuple(-1, 0, nullptr);
-    
+
     // -------------------------------------
     auto& ref = reference_[node_id];
-    get_free(std::get<1>(ref)).push(ref);
+    // get_free(std::get<1>(ref)).push(ref);
+    return_free(ref);
     ref = std::make_tuple(-1, 0, nullptr);
 }
 
@@ -97,7 +96,6 @@ GradientDataHolder GradientManager::get_gradient_final(int node_id) {
     return GradientDataHolder(*this, node_id, slot_ptr);
 }
 
-
 GradientDataHolder::~GradientDataHolder() {
     if(node_id < 0) {
         return;
@@ -106,4 +104,5 @@ GradientDataHolder::~GradientDataHolder() {
 }
 
 std::vector<std::unique_ptr<DeviceVector<float>>> SmartManager::slots_;
-std::vector<FreeList> SmartManager::free_lists_(64);
+
+std::multimap<size_t, SlotMeta> SmartManager::free_lists_;
