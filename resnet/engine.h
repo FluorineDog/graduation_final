@@ -26,6 +26,7 @@ class Engine {
         prepare_workspace();
         prepare_gradient_maps();    // (todo)
         register_weight_maps();    
+        mm.analyse();
     }
     template <class T, class... Arg>
     int insert_leaf(Arg... args) {
@@ -93,5 +94,3 @@ class Engine {
     MemoryManager mm;
     Optimizer opt;
 };
-
-enum class Mode { Collect, Optimized };
