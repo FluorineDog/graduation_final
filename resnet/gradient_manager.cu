@@ -60,8 +60,9 @@ float* SmartManager::prepare_new_node(int node_id) {
         auto id = slots_.size();
         cout << "[alloc map " << id << "] ";
         auto sz = meta_[node_id];
-        slots_.emplace_back(std::make_unique<DeviceVector<float>>(sz, 0));
-        auto ptr = slots_[id]->data().get();
+        slots_.emplace_back(std::make_unique<DeviceVector<float>>());
+        slots_.back()->resize(sz);
+        float* ptr = *slots_[id];
         reference_[node_id] = std::make_tuple(id, sz, ptr);
         return ptr;
     }
@@ -72,9 +73,8 @@ float* SmartManager::prepare_new_node(int node_id) {
     if(std_sz >= slot_sz) {
         vec.resize(std_sz);
         slot_sz = std_sz;
-        slot_ptr = vec.data().get();
+        slot_ptr = vec;
     }
-    // thrust::fill_n(vec.begin(), std_sz, 0);
     reference_[node_id] = std::make_tuple(slot_id, slot_sz, slot_ptr);
     return slot_ptr;
 }

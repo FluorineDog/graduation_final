@@ -10,7 +10,7 @@ class BatchNorm {
         dsc_bn.recover();
         this->bn_size = get_volume(dsc_bn.dims());
         extra.resize(bn_size * 4);
-        thrust::fill_n(extra.begin(), extra.size(), 0);
+        thrust::fill_n(thrust::device, extra.begin(), extra.size(), 0);
     }
     void forward(float* out, const float* in, const float* weight) {
         float alpha = 1, beta = 0;

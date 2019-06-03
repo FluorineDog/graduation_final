@@ -25,7 +25,7 @@ class FCFunctor {
     FCFunctor(int batch, int in_size, int out_size)
         : batch(batch), in_size(in_size), out_size(out_size) {
         ones.resize(batch);
-        thrust::fill_n(ones.begin(), batch, 1.0);
+        thrust::fill_n(thrust::device, ones.begin(), batch, 1.0);
     }
     void forward(float* out, const float* in, const float* weight) {
         auto bias = weight + in_size * out_size;

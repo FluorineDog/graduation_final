@@ -89,9 +89,9 @@ class Optimizer {
     
 
     void step(float coef) {
-        thrust::transform(weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
+        thrust::transform(thrust::device, weight_acc.begin(), weight_acc.end(), weight_grad.begin(),
                           weight_acc.begin(), OP1());
-        thrust::transform(weight.begin(), weight.end(), weight_acc.begin(),
+        thrust::transform(thrust::device, weight.begin(), weight.end(), weight_acc.begin(),
                           weight.begin(), OP2(-coef));
         // show_weight("", weight);
         // show_weight("@", weight_grad);

@@ -12,16 +12,42 @@ class Dims : public std::vector<int> {
 };
 
 template<class T>
-class DeviceVector : public thrust::device_vector<T> {
+class DeviceVector {
   public:
     DeviceVector() = default;
+    DeviceVector(size_t size){
+        resize(size);
+    }
     DeviceVector(const DeviceVector&) = delete;
     DeviceVector& operator=(const DeviceVector&) = delete;
-    using thrust::device_vector<T>::device_vector;
+    // using thrust::device_vector<T>::device_vector;
+    void resize(size_t size) {
+        size_ = size;
+        if(ptr){
+            cudaFree(ptr);
+        }
+        cudaMalloc(&ptr, size * sizeof(T));
+    }
+    float* begin() {
+        return ptr;
+    }
+    float* end() {
+        return ptr + size_;
+    }
     operator T*() {
-        return this->data().get();
+        // return this->data().get();
+        return ptr;
     }
     operator const T*() const {
         return *this;
     }
+    size_t size(){
+        return size_;
+    }
+    ~DeviceVector(){
+         
+    }
+  private:
+    size_t size_; 
+    T* ptr = nullptr;
 };
