@@ -131,7 +131,7 @@ auto gen_forward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts
             }
         }
     }
-    for(auto x: ref_counts){
+    for(auto x : ref_counts) {
         assert(x == 0);
     }
     return plans;
@@ -139,22 +139,39 @@ auto gen_forward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts
 
 auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts) {
     auto orders = toposort_acycle(forward_graph);
-    auto rev_orders = orders;
     auto N = forward_graph.n_vertex();
     std::reverse(rev_orders.begin(), rev_orders.end());
 
     ExecPlan plans;
     vector<char> featured(N);
-    for(auto id: brkpnts) {
-        featured[id] = true; 
+    for(auto id : brkpnts) {
+        featured[id] = true;
     }
 
-    for(auto v: rev_orders) {
+    for(auto i : Range(N)) {
+        i = N - 1 - i;
+        auto v = orders[i];
         if(featured[v]) {
             // recover plan
-        }        
-         
+            int head_index = i;
+            while(feature[orders[head_index]]) {
+                --head_index;
+            }
+            for(auto node_index : Range(head_index + 1, i + 1)) {
+                auto node = orders[node_index];
+                plans.emplace_back(ExecType::forward, node);
+                assert(feature[node] == false);
+                featured[node] = true;
+            }
+        }
+        assert(feature[node] == true);
+        plans.emplace_back(ExecType::backward, v);
+        plans.emplace_back(ExecType::free_feature, v);
     }
+    for(auto f : features) {
+        assert(f);
+    }
+    
 }
 
 void FeatureManager::analyse() {
