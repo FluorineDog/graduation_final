@@ -104,3 +104,6 @@ GradientDataHolder::~GradientDataHolder() {
     }
     gm.sm_.free_node(node_id);
 }
+
+std::vector<std::unique_ptr<DeviceVector<float>>> SmartManager::slots_;
+std::vector<FreeList> SmartManager::free_lists_(64);
