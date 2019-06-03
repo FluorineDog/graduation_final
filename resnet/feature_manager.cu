@@ -140,9 +140,8 @@ auto gen_forward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts
 auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnts) {
     auto orders = toposort_acycle(forward_graph);
     auto N = forward_graph.n_vertex();
-    std::reverse(rev_orders.begin(), rev_orders.end());
 
-    ExecPlan plans;
+    vector<ExecPlan> plans;
     vector<char> featured(N);
     for(auto id : brkpnts) {
         featured[id] = true;
@@ -151,27 +150,27 @@ auto gen_backward_plan(const DynamicGraph& forward_graph, const set<int>& brkpnt
     for(auto i : Range(N)) {
         i = N - 1 - i;
         auto v = orders[i];
-        if(featured[v]) {
+        if(!featured[v]) {
             // recover plan
             int head_index = i;
-            while(feature[orders[head_index]]) {
+            while(!featured[orders[head_index]]) {
                 --head_index;
             }
             for(auto node_index : Range(head_index + 1, i + 1)) {
                 auto node = orders[node_index];
+                assert(featured[node] == false);
                 plans.emplace_back(ExecType::forward, node);
-                assert(feature[node] == false);
                 featured[node] = true;
             }
         }
-        assert(feature[node] == true);
+        assert(featured[v] == true);
         plans.emplace_back(ExecType::backward, v);
         plans.emplace_back(ExecType::free_feature, v);
     }
-    for(auto f : features) {
+    for(auto f : featured) {
         assert(f);
     }
-    
+    return plans; 
 }
 
 void FeatureManager::analyse() {
@@ -189,7 +188,7 @@ void FeatureManager::analyse() {
     // step 2: choose the breakpoints
     auto brkpnts = choose_breakpoints(eng.forward_graph, candidates);
     // step 3: generate execution plan
-    auto fwd_plan = gen_forward_plan(eng.forward_graph, brkpnts);
-
+    auto fwd_plans = gen_forward_plan(eng.forward_graph, brkpnts);
+    auto bwd_plans = gen_backward_plan(eng.forward_graph, brkpnts);
     return;
 }
