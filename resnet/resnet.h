@@ -112,6 +112,9 @@ inline int resnet152(Engine& eng, int x_, int classes) {
 
 
 inline int resnet_inf(Engine& eng, int x_, int classes) {
-    return construct_resnet(eng, x_, {3, 8, 460, 3}, classes);
+    auto x = x_;
+    x = eng.insert_node<PoolingNode>(x, /*kernel*/ 1,  /*padding*/ 0, /*stride*/ 1);
+    return x;
+    // return construct_resnet(eng, x_, {3, 4, 6, 3}, classes);
 }
 
